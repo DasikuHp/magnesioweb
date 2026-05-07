@@ -1,7 +1,9 @@
 "use client";
-
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { useEffect } from "react";
+import { useGlassMode } from "@/hooks/useGlassMode";
+import { glassModeStore } from "@/lib/glassModeStore";
 
 const ScrollytellingCanvas = dynamic(
   () => import("@/components/ScrollytellingCanvas"),
@@ -11,6 +13,14 @@ const ScrollytellingCanvas = dynamic(
 export default function Home() {
   return (
     <main style={{ background: "#050505" }}>
+      <svg style={{display:'none'}} aria-hidden="true">
+        <defs>
+          <filter id="usm-sharp" x="0%" y="0%" width="100%" height="100%" colorInterpolationFilters="sRGB">
+            <feGaussianBlur stdDeviation="0.6" result="blur"/>
+            <feComposite in="SourceGraphic" in2="blur" operator="arithmetic" k1="0" k2="1.4" k3="-0.4" k4="0" result="sharpened"/>
+          </filter>
+        </defs>
+      </svg>
       <Nav />
       <ScrollytellingCanvas />
       <ProductsSection />
@@ -19,7 +29,61 @@ export default function Home() {
       <LifestyleSection />
       <NewsletterSection />
       <Footer />
+      <GlassButton />
     </main>
+  );
+}
+
+function GlassButton() {
+  const { active, toggle } = useGlassMode();
+
+  const handleGlassToggle = () => {
+    toggle();
+    if (!active) {
+      document.body.classList.add('glass-active');
+    } else {
+      document.body.classList.remove('glass-active');
+    }
+  };
+
+  useEffect(() => {
+    return glassModeStore.subscribe((isActive) => {
+      if (isActive) {
+        document.body.classList.add("glass-active");
+      } else {
+        document.body.classList.remove("glass-active");
+      }
+    });
+  }, []);
+
+  return (
+    <button
+      onClick={handleGlassToggle}
+      style={{
+        position: 'fixed',
+        bottom: '28px',
+        right: '28px',
+        zIndex: 50,
+        width: '48px',
+        height: '48px',
+        borderRadius: '50%',
+        border: 'none',
+        cursor: 'pointer',
+        backgroundImage: active
+          ? 'conic-gradient(from 180deg at 50% 50%, #ff6ec7 0deg, #7873f5 72deg, #4bc9f0 144deg, #72f5a1 216deg, #f5e642 288deg, #ff6ec7 360deg)'
+          : 'rgba(255,255,255,0.08)',
+        background: active ? undefined : 'rgba(255,255,255,0.08)',
+        boxShadow: active
+          ? '0 0 20px rgba(120,115,245,0.6), inset 0 0 0 1px rgba(255,255,255,0.2)'
+          : 'inset 0 0 0 1px rgba(255,255,255,0.15), 0 4px 16px rgba(0,0,0,0.4)',
+        fontSize: '18px',
+        lineHeight: 1,
+        transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+      }}
+      title={active ? 'Glass OFF' : 'Glass ON'}
+    >
+      ◎
+    </button>
   );
 }
 
@@ -67,13 +131,25 @@ function Nav() {
 
       <a
         href="#packs"
-        className="text-sm font-semibold text-white px-5 py-2.5 rounded-lg transition-all duration-200 hover:-translate-y-px"
+        className="relative group overflow-hidden rounded-xl text-sm font-semibold text-white px-6 py-2.5 transition-all duration-300 hover:scale-105 hover:-translate-y-0.5"
         style={{
-          background: "#e8620a",
-          boxShadow: "0 4px 20px rgba(232,98,10,0.3)",
+          background: "rgba(255, 255, 255, 0.05)",
+          backdropFilter: "blur(12px) saturate(180%)",
+          WebkitBackdropFilter: "blur(12px) saturate(180%)",
+          border: "1px solid rgba(255, 255, 255, 0.15)",
+          boxShadow: "inset 0 0 8px 0px rgba(255,255,255,0.1), 0 8px 32px 0 rgba(0,0,0,0.3)",
         }}
       >
-        Comprar ahora
+        <span className="relative z-10 flex items-center gap-2">
+          Comprar ahora
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="transition-transform group-hover:translate-x-1">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </span>
+        <div 
+          className="absolute inset-0 z-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out" 
+        />
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300" style={{ background: "#e8620a" }} />
       </a>
     </nav>
   );
@@ -85,7 +161,7 @@ function ProductsSection() {
       tag: "⚡ Más Vendido",
       tagColor: "#e8620a",
       bg: "#0d0804",
-      imageSrc: "/images/packde4naranja.png",
+      imageSrc: "/images/1botenaranja.png",
       imageAlt: "Magnesio Natural con Vitamina C",
       line: "MSI Sport",
       name: "Magnesio Natural con Vitamina C",
@@ -97,7 +173,7 @@ function ProductsSection() {
       tag: "🌿 Articulaciones",
       tagColor: "#7bc144",
       bg: "#060d04",
-      imageSrc: "/images/1botedeverde.jpg",
+      imageSrc: "/images/1boteverde.png",
       imageAlt: "Magnesio con Colágeno",
       line: "MSI Health Bienestar",
       name: "Magnesio con Colágeno",
@@ -109,7 +185,7 @@ function ProductsSection() {
       tag: "✨ Acción rápida",
       tagColor: "#c9a84c",
       bg: "#0a0a08",
-      imageSrc: "/images/aceitemagensio1.png",
+      imageSrc: "/images/1deaceitemagnesio.png",
       imageAlt: "Aceite de Magnesio Spray",
       line: "MSI Aceite Transdérmico",
       name: "Aceite de Magnesio en Spray",
@@ -207,7 +283,7 @@ function PacksSection() {
       qty: "1",
       unit: "ud",
       label: "Unidad",
-      imageSrc: "/images/packde4naranja.png",
+      imageSrc: "/images/1deaceitemagnesio.png",
       savings: null,
       price: "14,90€",
       perUnit: "14,90€/unidad",
@@ -232,7 +308,7 @@ function PacksSection() {
       qty: "6",
       unit: "uds",
       label: "Pack Total",
-      imageSrc: "/images/packde6naranja.png",
+      imageSrc: "/images/botede6verde.png",
       savings: "Ahorras 19,50€",
       price: "69,90€",
       perUnit: "11,65€/unidad",
@@ -452,6 +528,18 @@ function BenefitsSection() {
               sizes="200px"
             />
           </div>
+          <div
+            className="absolute -top-6 -left-6 w-36 h-28 rounded-xl overflow-hidden border-2"
+            style={{ borderColor: "rgba(255,255,255,0.06)", zIndex: 10 }}
+          >
+            <Image
+              src="/images/parejafeliz2.png"
+              alt="Vida activa MSI"
+              fill
+              className="object-cover"
+              sizes="160px"
+            />
+          </div>
         </div>
 
         <div>
@@ -507,15 +595,15 @@ function LifestyleSection() {
       large: true,
     },
     {
-      src: "/images/parejafeliz.png",
+      src: "/images/parejafeliz2.png",
       alt: "Pareja activa en naturaleza",
       label: "Activos cada día",
       large: false,
     },
     {
       src: "/images/3productosjuntos.png",
-      alt: "Productos MSI",
-      label: "Recuperación activa",
+      alt: "Gama completa MSI",
+      label: "La gama completa",
       large: false,
     },
   ];
@@ -556,7 +644,7 @@ function LifestyleSection() {
                 src={item.src}
                 alt={item.alt}
                 fill
-                className="object-cover group-hover:scale-105 transition-transform duration-700"
+                className={`object-cover object-center group-hover:scale-105 transition-transform duration-700`}
                 sizes="(max-width: 768px) 50vw, 33vw"
               />
               <div
