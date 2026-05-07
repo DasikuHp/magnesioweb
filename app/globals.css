@@ -1,8 +1,8 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
 
 :root {
   --bg: #050505;
@@ -15,6 +15,8 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a2a #0a0a0a;
 }
 
 html {
@@ -48,10 +50,6 @@ body {
   background: #3a3a3a;
 }
 
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #2a2a2a #0a0a0a;
-}
 
 @layer utilities {
   .text-white-90 {
@@ -66,4 +64,109 @@ body {
   .text-white-20 {
     color: rgba(255, 255, 255, 0.2);
   }
+}
+
+/* ===== GLASS MODE ===== */
+
+body.glass-active {
+  background: #020208;
+}
+
+body.glass-active .sticky {
+  z-index: 0 !important;
+}
+
+/* Capa iridiscente fija detrás de todo */
+body.glass-active::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 75% 55% at 8% 12%,
+      rgba(0, 62, 143, 0.28) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 70% at 92% 85%,
+      rgba(232, 98, 10, 0.20) 0%, transparent 50%),
+    radial-gradient(ellipse 65% 45% at 55% 55%,
+      rgba(0, 62, 143, 0.14) 0%, transparent 45%),
+    radial-gradient(ellipse 45% 50% at 75% 8%,
+      rgba(201, 168, 76, 0.16) 0%, transparent 40%),
+    radial-gradient(ellipse 50% 35% at 25% 90%,
+      rgba(123, 193, 68, 0.12) 0%, transparent 35%);
+  animation: iridescent 10s ease-in-out infinite alternate;
+  mix-blend-mode: screen;
+}
+
+/* El canvas queda visible detrás (z-index 0), la capa iridiscente encima (z:1),
+   y la UI encima de todo (z:2+) */
+
+/* Nav en glass mode */
+body.glass-active nav {
+  background: rgba(2, 2, 10, 0.3) !important;
+  backdrop-filter: blur(24px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
+  border-bottom: 1px solid rgba(180, 130, 255, 0.15) !important;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.06),
+    0 8px 32px rgba(0,0,0,0.4) !important;
+  position: relative;
+  z-index: 40;
+}
+
+/* Secciones con fondo oscuro → transparentes para ver el brillo */
+body.glass-active section {
+  background: transparent !important;
+  position: relative;
+  z-index: 2;
+}
+
+/* Cards de producto */
+body.glass-active [class*="rounded-2xl"],
+body.glass-active [class*="rounded-xl"] {
+  background: rgba(8, 8, 20, 0.45) !important;
+  backdrop-filter: blur(20px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+  border: 1px solid rgba(160, 120, 255, 0.15) !important;
+  border-top-color: rgba(200, 160, 255, 0.25) !important;
+  box-shadow:
+    0 4px 24px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.06) !important;
+}
+
+/* El pack featured (fondo blanco) no se rompe */
+body.glass-active [style*="background: rgba(255,255,255,0.95)"],
+body.glass-active [style*="background:rgba(255,255,255,0.95)"] {
+  background: rgba(240, 235, 255, 0.92) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+/* Newsletter */
+body.glass-active section[style*="background: linear-gradient"] {
+  background: linear-gradient(135deg,
+    rgba(148, 60, 10, 0.85) 0%,
+    rgba(100, 40, 0, 0.85) 100%) !important;
+  backdrop-filter: blur(10px) !important;
+  position: relative;
+  z-index: 2;
+}
+
+/* Footer */
+body.glass-active footer {
+  background: rgba(2, 2, 8, 0.6) !important;
+  backdrop-filter: blur(16px) !important;
+  position: relative;
+  z-index: 2;
+}
+
+@keyframes iridescent {
+  0%   { opacity: 0.6; transform: translate(0%, 0%) scale(1); }
+  25%  { opacity: 0.9; transform: translate(1%, -1%) scale(1.02); }
+  50%  { opacity: 0.7; transform: translate(-1%, 1%) scale(0.99); }
+  75%  { opacity: 1.0; transform: translate(0.5%, 0.5%) scale(1.01); }
+  100% { opacity: 0.65; transform: translate(-0.5%, -0.5%) scale(1); }
+}
+
+body.glass-active * { 
+  transition: background 0.4s ease, backdrop-filter 0.4s ease; 
 }
