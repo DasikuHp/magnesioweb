@@ -10,6 +10,8 @@ export const glassModeStore = {
   },
   subscribe: (fn: Listener) => {
     _listeners.add(fn);
-    return () => _listeners.delete(fn);
+    return () => {
+      _listeners.delete(fn);
+    };
   }
 };
