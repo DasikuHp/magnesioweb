@@ -1,0 +1,10 @@
+{
+  "layout": "msi-landing",
+  "sections": {
+    "main": {
+      "type": "msi-landing",
+      "settings": {}
+    }
+  },
+  "order": ["main"]
+}

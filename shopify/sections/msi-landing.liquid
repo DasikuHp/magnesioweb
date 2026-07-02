@@ -1,0 +1,1003 @@
+{% comment %}
+  ============================================================
+  MSI Landing — sección Shopify autocontenida.
+  Convertida desde Next.js 14 + React + Tailwind + Framer Motion
+  (repo DasikuHp/magnesioweb) a Liquid + CSS plano + JS vanilla.
+
+  - No toca theme.liquid, checkout ni carrito.
+  - Requiere los assets: msi-landing.css, msi-landing.js y los
+    frames WebP (frame_0001.webp … frame_0121.webp) — ver README.
+  - Los botones "Comprar" usan /cart/add?id=VARIANT_ID o la ficha
+    de producto. IDs configurables en el schema.
+  ============================================================
+{% endcomment %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
+{{ 'msi-landing.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'msi-landing.js' | asset_url }}" defer></script>
+
+{%- liquid
+  # URL base de los frames. Si el ajuste está vacío, se asume que los
+  # frames están subidos a la carpeta assets/ del tema y se deriva la
+  # URL base desde asset_url.
+  assign frames_base = section.settings.frames_base_url | strip
+  if frames_base == blank
+    assign frames_probe = 'frame_0001.webp' | asset_url
+    assign frames_base = frames_probe | split: '?' | first | replace: 'frame_0001.webp', ''
+  endif
+
+  # — Producto 1: Magnesio con Vitamina C (naranja) —
+  assign p1_obj = all_products[section.settings.product_1]
+  assign p1_price = section.settings.product_1_price
+  assign p1_variant = section.settings.product_1_variant_id | strip
+  assign p1_soldout = section.settings.product_1_soldout
+  assign p1_url = '/products/' | append: section.settings.product_1_handle
+  if p1_obj != blank
+    assign p1_price = p1_obj.price | money
+    assign p1_variant = p1_obj.selected_or_first_available_variant.id
+    assign p1_url = p1_obj.url
+    if p1_obj.available
+      assign p1_soldout = false
+    else
+      assign p1_soldout = true
+    endif
+  endif
+
+  # — Producto 2: Magnesio con Colágeno (verde) —
+  assign p2_obj = all_products[section.settings.product_2]
+  assign p2_price = section.settings.product_2_price
+  assign p2_variant = section.settings.product_2_variant_id | strip
+  assign p2_soldout = section.settings.product_2_soldout
+  assign p2_url = '/products/' | append: section.settings.product_2_handle
+  if p2_obj != blank
+    assign p2_price = p2_obj.price | money
+    assign p2_variant = p2_obj.selected_or_first_available_variant.id
+    assign p2_url = p2_obj.url
+    if p2_obj.available
+      assign p2_soldout = false
+    else
+      assign p2_soldout = true
+    endif
+  endif
+
+  # — Producto 3: Aceite de Magnesio (spray) —
+  assign p3_obj = all_products[section.settings.product_3]
+  assign p3_price = section.settings.product_3_price
+  assign p3_variant = section.settings.product_3_variant_id | strip
+  assign p3_soldout = section.settings.product_3_soldout
+  assign p3_url = '/products/' | append: section.settings.product_3_handle
+  if p3_obj != blank
+    assign p3_price = p3_obj.price | money
+    assign p3_variant = p3_obj.selected_or_first_available_variant.id
+    assign p3_url = p3_obj.url
+    if p3_obj.available
+      assign p3_soldout = false
+    else
+      assign p3_soldout = true
+    endif
+  endif
+
+  assign pack_1_variant = section.settings.pack_1_variant_id | strip
+  assign pack_4_variant = section.settings.pack_4_variant_id | strip
+  assign pack_6_variant = section.settings.pack_6_variant_id | strip
+-%}
+
+{% style %}
+  #shopify-section-{{ section.id }} {
+    --msi-orange: {{ section.settings.accent_orange }};
+    --msi-green: {{ section.settings.accent_green }};
+    --msi-gold: {{ section.settings.accent_gold }};
+    --msi-navy: #0f1e3d;
+    --msi-hero-accent: {{ section.settings.accent_orange }};
+    --msi-hero-glow: {{ section.settings.accent_orange | color_modify: 'alpha', 0.8 }};
+  }
+{% endstyle %}
+
+<div
+  class="msi-landing"
+  data-msi-landing
+  data-frames-base="{{ frames_base }}"
+  data-frame-prefix="{{ section.settings.frames_prefix | default: 'frame_' }}"
+  data-frame-ext=".webp"
+  data-frame-count="121"
+>
+  {%- if section.settings.show_nav -%}
+    <nav class="msi-nav">
+      <a href="#" class="msi-nav-logo">
+        <span class="msi-nav-logo-title"><span class="msi-accent">MSI</span> Sport</span>
+        <span class="msi-nav-logo-sub">magnesionatural.com</span>
+      </a>
+      <ul class="msi-nav-menu">
+        <li><a href="#productos">Productos</a></li>
+        <li><a href="#packs">Packs</a></li>
+        <li><a href="#beneficios">Beneficios</a></li>
+        <li><a href="#nosotros">Nosotros</a></li>
+      </ul>
+      <a href="#packs" class="msi-nav-cta">
+        Comprar ahora
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </nav>
+  {%- endif -%}
+
+  {%- comment -%} Pantalla de carga (JS la muestra solo en escritorio) {%- endcomment -%}
+  <div class="msi-loader" data-msi-loader hidden>
+    <div class="msi-loader-logo">
+      <span class="msi-loader-logo-main">MSI</span>
+      <span class="msi-loader-logo-sub">Sport</span>
+    </div>
+    <div class="msi-loader-bar-wrap">
+      <div class="msi-loader-bar">
+        <div class="msi-loader-bar-fill" data-msi-loader-fill></div>
+      </div>
+      <span class="msi-loader-label" data-msi-loader-label>Cargando 0%</span>
+    </div>
+    <div class="msi-loader-dots"><span></span><span></span><span></span></div>
+  </div>
+
+  {%- comment -%} ===== HERO SCROLLYTELLING (500vh + canvas sticky) ===== {%- endcomment -%}
+  <div class="msi-hero" data-msi-hero>
+    <div class="msi-hero-sticky">
+      <canvas class="msi-hero-canvas" data-msi-canvas></canvas>
+      <div class="msi-hero-vignette"></div>
+      <div class="msi-hero-noise"></div>
+
+      {%- comment -%} Beat A: 0–20%, izquierda {%- endcomment -%}
+      <div class="msi-beat msi-beat--left msi-beat--a" data-msi-beat data-start="-0.02" data-end="0.2">
+        <span class="msi-beat-tag">{{ section.settings.beat_a_tag }}</span>
+        <h1 class="msi-beat-title">{{ section.settings.beat_a_title | newline_to_br }}</h1>
+        <p class="msi-beat-sub">{{ section.settings.beat_a_sub }}</p>
+      </div>
+
+      {%- comment -%} Beat B: 25–45%, izquierda {%- endcomment -%}
+      <div class="msi-beat msi-beat--left msi-beat--b" data-msi-beat data-start="0.25" data-end="0.45">
+        <span class="msi-beat-tag">{{ section.settings.beat_b_tag }}</span>
+        <h2 class="msi-beat-title">{{ section.settings.beat_b_title | newline_to_br }}</h2>
+        <p class="msi-beat-sub">{{ section.settings.beat_b_sub }}</p>
+      </div>
+
+      {%- comment -%} Beat C: 50–70%, derecha {%- endcomment -%}
+      <div class="msi-beat msi-beat--right msi-beat--c" data-msi-beat data-start="0.5" data-end="0.7">
+        <span class="msi-beat-tag">{{ section.settings.beat_c_tag }}</span>
+        <h2 class="msi-beat-title">{{ section.settings.beat_c_title | newline_to_br }}</h2>
+        <p class="msi-beat-sub">{{ section.settings.beat_c_sub }}</p>
+      </div>
+
+      {%- comment -%} Beat D: 75–95%, centro + CTA {%- endcomment -%}
+      <div class="msi-beat msi-beat--center msi-beat--d" data-msi-beat data-start="0.75" data-end="0.95">
+        <span class="msi-beat-tag">{{ section.settings.beat_d_tag }}</span>
+        <h2 class="msi-beat-title">{{ section.settings.beat_d_title | newline_to_br }}</h2>
+        <p class="msi-beat-sub">{{ section.settings.beat_d_sub }}</p>
+        <a href="#packs" class="msi-beat-cta">
+          {{ section.settings.beat_d_cta }}
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+
+      {%- comment -%} Hint "Scroll para explorar" {%- endcomment -%}
+      <div class="msi-hero-hint" data-msi-hint>
+        <span class="msi-hero-hint-label">Scroll para explorar</span>
+        <div class="msi-hero-hint-line"></div>
+      </div>
+
+      {%- comment -%} Fallback móvil: imagen estática, sin canvas ni precarga {%- endcomment -%}
+      <div class="msi-hero-mobile">
+        <div class="msi-hero-mobile-img">
+          {%- if section.settings.mobile_image -%}
+            {{ section.settings.mobile_image | image_url: width: 900 | image_tag: loading: 'eager', alt: section.settings.beat_a_tag }}
+          {%- elsif section.settings.product_1_image -%}
+            {{ section.settings.product_1_image | image_url: width: 900 | image_tag: loading: 'eager', alt: section.settings.beat_a_tag }}
+          {%- else -%}
+            {{ 'product-1' | placeholder_svg_tag: 'msi-img-placeholder' }}
+          {%- endif -%}
+        </div>
+        <span class="msi-beat-tag">{{ section.settings.beat_a_tag }}</span>
+        <h1 class="msi-beat-title">{{ section.settings.beat_a_title | newline_to_br }}</h1>
+        <p class="msi-beat-sub">{{ section.settings.beat_a_sub }}</p>
+        <div class="msi-hero-mobile-price">{{ section.settings.beat_d_title }}</div>
+        <a href="#packs" class="msi-beat-cta">
+          {{ section.settings.beat_d_cta }}
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {%- comment -%} ===== PRODUCTOS ===== {%- endcomment -%}
+  <section id="productos" class="msi-section msi-products">
+    <div class="msi-container">
+      <div class="msi-section-head">
+        <span class="msi-eyebrow">Nuestra Gama</span>
+        <h2 class="msi-h2">Los tres pilares del magnesio MSI</h2>
+        <p class="msi-section-sub">
+          Cada producto está formulado para una necesidad específica. Elige el
+          tuyo o combínalos para máximos resultados.
+        </p>
+      </div>
+
+      <div class="msi-products-grid">
+        {%- comment -%} Producto 1 — Magnesio Natural con Vitamina C {%- endcomment -%}
+        <div class="msi-product-card">
+          <div class="msi-product-media msi-product-media--1">
+            <span class="msi-product-tag msi-product-tag--1">⚡ Más Vendido</span>
+            {%- if section.settings.product_1_image -%}
+              {{ section.settings.product_1_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: 'Magnesio Natural con Vitamina C' }}
+            {%- elsif p1_obj != blank and p1_obj.featured_image -%}
+              {{ p1_obj.featured_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: p1_obj.featured_image.alt }}
+            {%- else -%}
+              {{ 'product-1' | placeholder_svg_tag: 'msi-img-placeholder' }}
+            {%- endif -%}
+          </div>
+          <div class="msi-product-body">
+            <span class="msi-product-line">MSI Sport</span>
+            <h3 class="msi-product-name">Magnesio Natural con Vitamina C</h3>
+            <p class="msi-product-desc">
+              Alta absorción con Vitamina C. Ideal para el sistema nervioso,
+              muscular y la reducción del cansancio. 60 cápsulas veganas.
+            </p>
+            <div class="msi-product-foot">
+              <span class="msi-product-price">{{ p1_price }} <small>/ ud.</small></span>
+              {%- if p1_soldout -%}
+                <a href="{{ p1_url }}" class="msi-buy-btn is-soldout">Agotado</a>
+              {%- elsif p1_variant != blank -%}
+                <a href="{{ routes.cart_add_url }}?id={{ p1_variant }}&quantity=1" class="msi-buy-btn msi-buy-btn--1">Comprar →</a>
+              {%- else -%}
+                <a href="{{ p1_url }}" class="msi-buy-btn msi-buy-btn--1">Ver producto →</a>
+              {%- endif -%}
+            </div>
+          </div>
+        </div>
+
+        {%- comment -%} Producto 2 — Magnesio con Colágeno {%- endcomment -%}
+        <div class="msi-product-card">
+          <div class="msi-product-media msi-product-media--2">
+            <span class="msi-product-tag msi-product-tag--2">🌿 Articulaciones</span>
+            {%- if section.settings.product_2_image -%}
+              {{ section.settings.product_2_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: 'Magnesio con Colágeno' }}
+            {%- elsif p2_obj != blank and p2_obj.featured_image -%}
+              {{ p2_obj.featured_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: p2_obj.featured_image.alt }}
+            {%- else -%}
+              {{ 'product-2' | placeholder_svg_tag: 'msi-img-placeholder' }}
+            {%- endif -%}
+          </div>
+          <div class="msi-product-body">
+            <span class="msi-product-line">MSI Health Bienestar</span>
+            <h3 class="msi-product-name">Magnesio con Colágeno</h3>
+            <p class="msi-product-desc">
+              Sinergia de magnesio y colágeno para articulaciones, huesos y
+              piel. Bienestar integral y activo para cada día.
+            </p>
+            <div class="msi-product-foot">
+              <span class="msi-product-price">{{ p2_price }} <small>/ ud.</small></span>
+              {%- if p2_soldout -%}
+                <a href="{{ p2_url }}" class="msi-buy-btn is-soldout">Agotado</a>
+              {%- elsif p2_variant != blank -%}
+                <a href="{{ routes.cart_add_url }}?id={{ p2_variant }}&quantity=1" class="msi-buy-btn msi-buy-btn--2">Comprar →</a>
+              {%- else -%}
+                <a href="{{ p2_url }}" class="msi-buy-btn msi-buy-btn--2">Ver producto →</a>
+              {%- endif -%}
+            </div>
+          </div>
+        </div>
+
+        {%- comment -%} Producto 3 — Aceite de Magnesio en Spray {%- endcomment -%}
+        <div class="msi-product-card">
+          <div class="msi-product-media msi-product-media--3">
+            <span class="msi-product-tag msi-product-tag--3">✨ Acción rápida</span>
+            {%- if section.settings.product_3_image -%}
+              {{ section.settings.product_3_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: 'Aceite de Magnesio Spray' }}
+            {%- elsif p3_obj != blank and p3_obj.featured_image -%}
+              {{ p3_obj.featured_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: p3_obj.featured_image.alt }}
+            {%- else -%}
+              {{ 'product-3' | placeholder_svg_tag: 'msi-img-placeholder' }}
+            {%- endif -%}
+          </div>
+          <div class="msi-product-body">
+            <span class="msi-product-line">MSI Aceite Transdérmico</span>
+            <h3 class="msi-product-name">Aceite de Magnesio en Spray</h3>
+            <p class="msi-product-desc">
+              Absorción directa a través de la piel. Sales de magnesio
+              naturales del Balneario de La Higuera. 125 ml.
+            </p>
+            <div class="msi-product-foot">
+              <span class="msi-product-price">{{ p3_price }} <small>/ ud.</small></span>
+              {%- if p3_soldout -%}
+                <a href="{{ p3_url }}" class="msi-buy-btn is-soldout">Agotado</a>
+              {%- elsif p3_variant != blank -%}
+                <a href="{{ routes.cart_add_url }}?id={{ p3_variant }}&quantity=1" class="msi-buy-btn msi-buy-btn--3">Comprar →</a>
+              {%- else -%}
+                <a href="{{ p3_url }}" class="msi-buy-btn msi-buy-btn--3">Ver producto →</a>
+              {%- endif -%}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {%- comment -%} ===== PACKS ===== {%- endcomment -%}
+  <section id="packs" class="msi-section msi-packs">
+    <div class="msi-container msi-container--md">
+      <div class="msi-section-head">
+        <span class="msi-eyebrow">Ahorra con Packs</span>
+        <h2 class="msi-h2">Elige tu pack y ahorra</h2>
+        <p class="msi-section-sub">
+          Cuanto más cuidas tu bienestar, más ahorras. Portes gratis a partir
+          del pack de 6 unidades.
+        </p>
+      </div>
+
+      <div class="msi-packs-grid">
+        {%- comment -%} Pack 1 unidad {%- endcomment -%}
+        <div class="msi-pack">
+          <span class="msi-pack-qty">1<span>ud</span></span>
+          <span class="msi-pack-label">Unidad</span>
+          <div class="msi-pack-img">
+            {%- if section.settings.pack_1_image -%}
+              {{ section.settings.pack_1_image | image_url: width: 600 | image_tag: loading: 'lazy', alt: 'Pack 1 unidad' }}
+            {%- else -%}
+              {{ 'product-4' | placeholder_svg_tag: 'msi-img-placeholder' }}
+            {%- endif -%}
+          </div>
+          <div class="msi-pack-price">{{ section.settings.pack_1_price }}</div>
+          <div class="msi-pack-perunit">{{ section.settings.pack_1_perunit }}</div>
+          <div class="msi-pack-shipping">Envío estándar</div>
+          {%- if pack_1_variant != blank -%}
+            <a href="{{ routes.cart_add_url }}?id={{ pack_1_variant }}&quantity=1" class="msi-pack-btn">Comprar ahora</a>
+          {%- else -%}
+            <span class="msi-pack-btn is-pending">Próximamente</span>
+          {%- endif -%}
+        </div>
+
+        {%- comment -%} Pack 4 unidades (destacado) {%- endcomment -%}
+        <div class="msi-pack msi-pack--featured">
+          <span class="msi-pack-badge">⭐ Más Popular</span>
+          <span class="msi-pack-qty">4<span>uds</span></span>
+          <span class="msi-pack-label">Pack Familiar</span>
+          <div class="msi-pack-img">
+            {%- if section.settings.pack_4_image -%}
+              {{ section.settings.pack_4_image | image_url: width: 600 | image_tag: loading: 'lazy', alt: 'Pack 4 unidades' }}
+            {%- else -%}
+              {{ 'product-5' | placeholder_svg_tag: 'msi-img-placeholder' }}
+            {%- endif -%}
+          </div>
+          <span class="msi-pack-savings">✅ {{ section.settings.pack_4_savings }}</span>
+          <div class="msi-pack-price">{{ section.settings.pack_4_price }}</div>
+          <div class="msi-pack-perunit">{{ section.settings.pack_4_perunit }}</div>
+          <div class="msi-pack-shipping">Envío estándar</div>
+          {%- if pack_4_variant != blank -%}
+            <a href="{{ routes.cart_add_url }}?id={{ pack_4_variant }}&quantity=1" class="msi-pack-btn msi-pack-btn--featured">Comprar Pack de 4</a>
+          {%- else -%}
+            <span class="msi-pack-btn msi-pack-btn--featured is-pending">Próximamente</span>
+          {%- endif -%}
+        </div>
+
+        {%- comment -%} Pack 6 unidades {%- endcomment -%}
+        <div class="msi-pack">
+          <span class="msi-pack-qty">6<span>uds</span></span>
+          <span class="msi-pack-label">Pack Total</span>
+          <div class="msi-pack-img">
+            {%- if section.settings.pack_6_image -%}
+              {{ section.settings.pack_6_image | image_url: width: 600 | image_tag: loading: 'lazy', alt: 'Pack 6 unidades' }}
+            {%- else -%}
+              {{ 'product-6' | placeholder_svg_tag: 'msi-img-placeholder' }}
+            {%- endif -%}
+          </div>
+          <span class="msi-pack-savings">✅ {{ section.settings.pack_6_savings }}</span>
+          <div class="msi-pack-price">{{ section.settings.pack_6_price }}</div>
+          <div class="msi-pack-perunit">{{ section.settings.pack_6_perunit }}</div>
+          <div class="msi-pack-shipping"><span class="msi-pack-shipping-free">PORTES GRATIS</span></div>
+          {%- if pack_6_variant != blank -%}
+            <a href="{{ routes.cart_add_url }}?id={{ pack_6_variant }}&quantity=1" class="msi-pack-btn">Comprar Pack de 6</a>
+          {%- else -%}
+            <span class="msi-pack-btn is-pending">Próximamente</span>
+          {%- endif -%}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {%- comment -%} ===== BENEFICIOS ===== {%- endcomment -%}
+  <section id="beneficios" class="msi-section msi-benefits">
+    <div class="msi-container msi-benefits-grid">
+      <div class="msi-benefits-visual">
+        <div class="msi-benefits-main">
+          {%- if section.settings.benefits_image_main -%}
+            {{ section.settings.benefits_image_main | image_url: width: 1200 | image_tag: loading: 'lazy', alt: 'Vida activa con MSI Magnesio' }}
+          {%- else -%}
+            {{ 'lifestyle-1' | placeholder_svg_tag: 'msi-img-placeholder' }}
+          {%- endif -%}
+        </div>
+        <div class="msi-benefits-float msi-benefits-float--br">
+          {%- if section.settings.benefits_image_a -%}
+            {{ section.settings.benefits_image_a | image_url: width: 400 | image_tag: loading: 'lazy', alt: 'Gama completa MSI' }}
+          {%- else -%}
+            {{ 'product-1' | placeholder_svg_tag: 'msi-img-placeholder' }}
+          {%- endif -%}
+        </div>
+        <div class="msi-benefits-float msi-benefits-float--tl">
+          {%- if section.settings.benefits_image_b -%}
+            {{ section.settings.benefits_image_b | image_url: width: 400 | image_tag: loading: 'lazy', alt: 'Vida activa MSI' }}
+          {%- else -%}
+            {{ 'lifestyle-2' | placeholder_svg_tag: 'msi-img-placeholder' }}
+          {%- endif -%}
+        </div>
+      </div>
+
+      <div class="msi-benefits-copy">
+        <span class="msi-eyebrow">¿Por qué MSI?</span>
+        <h2 class="msi-h2">El magnesio que tu cuerpo necesita, en la forma que mejor funciona</h2>
+        <p>
+          Más de 15 años de formulación científica para que cada cápsula
+          aporte el máximo beneficio a tu organismo.
+        </p>
+
+        <div class="msi-benefit-list">
+          <div class="msi-benefit">
+            <div class="msi-benefit-icon" style="background: rgba(232,98,10,0.12)">💪</div>
+            <div>
+              <div class="msi-benefit-title">Alta biodisponibilidad</div>
+              <div class="msi-benefit-desc">Fórmula optimizada para máxima absorción intestinal y transdérmica. Tu cuerpo aprovecha cada miligramo.</div>
+            </div>
+          </div>
+          <div class="msi-benefit">
+            <div class="msi-benefit-icon" style="background: rgba(123,193,68,0.12)">🌿</div>
+            <div>
+              <div class="msi-benefit-title">100% vegano y natural</div>
+              <div class="msi-benefit-desc">Cápsulas veganas sin aditivos artificiales. Ingredientes de origen natural certificados.</div>
+            </div>
+          </div>
+          <div class="msi-benefit">
+            <div class="msi-benefit-icon" style="background: rgba(255,255,255,0.06)">⚡</div>
+            <div>
+              <div class="msi-benefit-title">Reduce el cansancio y los calambres</div>
+              <div class="msi-benefit-desc">Ideal para estilos de vida activos. Combate la fatiga muscular y mejora la recuperación.</div>
+            </div>
+          </div>
+          <div class="msi-benefit">
+            <div class="msi-benefit-icon" style="background: rgba(232,98,10,0.08)">🦴</div>
+            <div>
+              <div class="msi-benefit-title">Huesos y articulaciones fuertes</div>
+              <div class="msi-benefit-desc">El magnesio es esencial para el metabolismo óseo. Con colágeno para protección articular completa.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {%- comment -%} ===== LIFESTYLE ===== {%- endcomment -%}
+  <section id="nosotros" class="msi-section msi-lifestyle">
+    <div class="msi-container">
+      <div class="msi-section-head">
+        <span class="msi-eyebrow">Vida Activa</span>
+        <h2 class="msi-h2">Para quienes no paran</h2>
+        <p class="msi-section-sub">
+          MSI nació para acompañar a personas activas que cuidan su bienestar
+          sin renunciar a la vida que aman.
+        </p>
+      </div>
+
+      <div class="msi-lifestyle-grid">
+        <div class="msi-lifestyle-item msi-lifestyle-item--large">
+          {%- if section.settings.life_image_1 -%}
+            {{ section.settings.life_image_1 | image_url: width: 900 | image_tag: loading: 'lazy', alt: 'Familia activa con MSI' }}
+          {%- else -%}
+            {{ 'lifestyle-1' | placeholder_svg_tag: 'msi-img-placeholder' }}
+          {%- endif -%}
+          <div class="msi-lifestyle-overlay"><span>Vida en familia</span></div>
+        </div>
+        <div class="msi-lifestyle-item">
+          {%- if section.settings.life_image_2 -%}
+            {{ section.settings.life_image_2 | image_url: width: 700 | image_tag: loading: 'lazy', alt: 'Pareja activa en naturaleza' }}
+          {%- else -%}
+            {{ 'lifestyle-2' | placeholder_svg_tag: 'msi-img-placeholder' }}
+          {%- endif -%}
+          <div class="msi-lifestyle-overlay"><span>Activos cada día</span></div>
+        </div>
+        <div class="msi-lifestyle-item">
+          {%- if section.settings.life_image_3 -%}
+            {{ section.settings.life_image_3 | image_url: width: 700 | image_tag: loading: 'lazy', alt: 'Gama completa MSI' }}
+          {%- else -%}
+            {{ 'product-2' | placeholder_svg_tag: 'msi-img-placeholder' }}
+          {%- endif -%}
+          <div class="msi-lifestyle-overlay"><span>La gama completa</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {%- comment -%} ===== NEWSLETTER (formulario nativo de Shopify) ===== {%- endcomment -%}
+  <section class="msi-newsletter">
+    <h2>Mantente activo, mantente informado</h2>
+    <p>Consejos de bienestar, ofertas exclusivas y novedades MSI directo a tu correo.</p>
+    {%- form 'customer', class: 'msi-newsletter-form-wrap' -%}
+      {%- if form.posted_successfully? -%}
+        <p class="msi-newsletter-msg">✅ ¡Gracias por suscribirte! Revisa tu correo.</p>
+      {%- else -%}
+        <div class="msi-newsletter-form">
+          <input type="hidden" name="contact[tags]" value="newsletter">
+          <input
+            type="email"
+            name="contact[email]"
+            placeholder="tu@email.com"
+            autocomplete="email"
+            aria-label="Correo electrónico"
+            required
+          >
+          <button type="submit">Suscribirme</button>
+        </div>
+        {%- if form.errors -%}
+          <p class="msi-newsletter-error">{{ form.errors.translated_fields.email }} {{ form.errors.messages.email }}</p>
+        {%- endif -%}
+      {%- endif -%}
+    {%- endform -%}
+  </section>
+
+  {%- comment -%} ===== FOOTER ===== {%- endcomment -%}
+  {%- if section.settings.show_footer -%}
+    <footer class="msi-footer">
+      <div class="msi-container">
+        <div class="msi-footer-grid">
+          <div class="msi-footer-brand">
+            <div class="msi-footer-brand-name"><span class="msi-accent">MSI</span> Sport</div>
+            <p>
+              Magnesio natural de alta calidad para estilos de vida activos.
+              Formulado con los mejores ingredientes, pensado para que sigas
+              moviéndote.
+            </p>
+          </div>
+          <div>
+            <h4>Productos</h4>
+            <ul>
+              <li><a href="{{ p1_url }}">Magnesio Natural + Vitamina C</a></li>
+              <li><a href="{{ p2_url }}">Magnesio + Colágeno</a></li>
+              <li><a href="{{ p3_url }}">Aceite de Magnesio Spray</a></li>
+              <li><a href="#packs">Packs y Ofertas</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Información</h4>
+            <ul>
+              <li><a href="/pages/sobre-msi">Sobre MSI</a></li>
+              <li><a href="{{ shop.shipping_policy.url | default: '#' }}">Envíos y Devoluciones</a></li>
+              <li><a href="{{ shop.privacy_policy.url | default: '#' }}">Política de Privacidad</a></li>
+              <li><a href="{{ shop.terms_of_service.url | default: '#' }}">Aviso Legal</a></li>
+              <li><a href="/pages/contacto">Contacto</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="msi-footer-bottom">
+          <span>© {{ 'now' | date: '%Y' }} MSI Sport — magnesionatural.com. Todos los derechos reservados.</span>
+          <span>🔒 Pago Seguro · SSL · RGPD</span>
+        </div>
+      </div>
+    </footer>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "MSI Landing",
+  "tag": "div",
+  "class": "msi-landing-wrapper",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Colores de acento"
+    },
+    {
+      "type": "color",
+      "id": "accent_orange",
+      "label": "Naranja (principal)",
+      "default": "#e8620a"
+    },
+    {
+      "type": "color",
+      "id": "accent_green",
+      "label": "Verde",
+      "default": "#7bc144"
+    },
+    {
+      "type": "color",
+      "id": "accent_gold",
+      "label": "Dorado",
+      "default": "#c9a84c"
+    },
+    {
+      "type": "header",
+      "content": "Hero — frames de animación"
+    },
+    {
+      "type": "text",
+      "id": "frames_base_url",
+      "label": "URL base de los frames",
+      "info": "Déjalo vacío si subiste los frames a la carpeta assets/ del tema. Si los subiste a Contenido > Archivos, pega aquí la URL base (todo lo anterior a frame_0001.webp), p. ej. https://cdn.shopify.com/s/files/1/XXXX/XXXX/files/"
+    },
+    {
+      "type": "text",
+      "id": "frames_prefix",
+      "label": "Prefijo de los archivos de frame",
+      "default": "frame_",
+      "info": "Los archivos deben llamarse [prefijo]0001.webp … [prefijo]0121.webp"
+    },
+    {
+      "type": "image_picker",
+      "id": "mobile_image",
+      "label": "Imagen estática para móvil",
+      "info": "En pantallas <768px el canvas se desactiva y se muestra esta imagen."
+    },
+    {
+      "type": "header",
+      "content": "Hero — Beat A (0–20%)"
+    },
+    {
+      "type": "text",
+      "id": "beat_a_tag",
+      "label": "Etiqueta",
+      "default": "Producto Nº1 en Magnesio Natural"
+    },
+    {
+      "type": "textarea",
+      "id": "beat_a_title",
+      "label": "Título (salto de línea = <br>)",
+      "default": "MAGNESIO\nNATURAL"
+    },
+    {
+      "type": "textarea",
+      "id": "beat_a_sub",
+      "label": "Subtítulo",
+      "default": "El mineral que tu cuerpo necesita, en la forma que mejor funciona."
+    },
+    {
+      "type": "header",
+      "content": "Hero — Beat B (25–45%)"
+    },
+    {
+      "type": "text",
+      "id": "beat_b_tag",
+      "label": "Etiqueta",
+      "default": "Alta absorción"
+    },
+    {
+      "type": "textarea",
+      "id": "beat_b_title",
+      "label": "Título",
+      "default": "3× más\nrápida"
+    },
+    {
+      "type": "textarea",
+      "id": "beat_b_sub",
+      "label": "Subtítulo",
+      "default": "Vitamina C + Magnesio. Fórmula exclusiva MSI para máxima biodisponibilidad."
+    },
+    {
+      "type": "header",
+      "content": "Hero — Beat C (50–70%)"
+    },
+    {
+      "type": "text",
+      "id": "beat_c_tag",
+      "label": "Etiqueta",
+      "default": "Bienestar Total"
+    },
+    {
+      "type": "textarea",
+      "id": "beat_c_title",
+      "label": "Título",
+      "default": "Músculos.\nHuesos.\nMente."
+    },
+    {
+      "type": "textarea",
+      "id": "beat_c_sub",
+      "label": "Subtítulo",
+      "default": "60 cápsulas veganas para articulaciones, sistema nervioso y recuperación activa."
+    },
+    {
+      "type": "header",
+      "content": "Hero — Beat D (75–95%, CTA final)"
+    },
+    {
+      "type": "text",
+      "id": "beat_d_tag",
+      "label": "Etiqueta",
+      "default": "Empieza hoy"
+    },
+    {
+      "type": "textarea",
+      "id": "beat_d_title",
+      "label": "Título (precio)",
+      "default": "14,90€"
+    },
+    {
+      "type": "textarea",
+      "id": "beat_d_sub",
+      "label": "Subtítulo",
+      "default": "Envío en 24/48h · 100% Vegano"
+    },
+    {
+      "type": "text",
+      "id": "beat_d_cta",
+      "label": "Texto del botón",
+      "default": "Ver Packs y Precios"
+    },
+    {
+      "type": "header",
+      "content": "Producto 1 — Magnesio + Vitamina C"
+    },
+    {
+      "type": "product",
+      "id": "product_1",
+      "label": "Producto de Shopify (opcional)",
+      "info": "Si lo eliges, el precio, stock y enlace se leen automáticamente de la tienda y anulan los campos manuales."
+    },
+    {
+      "type": "image_picker",
+      "id": "product_1_image",
+      "label": "Imagen"
+    },
+    {
+      "type": "text",
+      "id": "product_1_price",
+      "label": "Precio (manual)",
+      "default": "14,90€"
+    },
+    {
+      "type": "text",
+      "id": "product_1_variant_id",
+      "label": "Variant ID",
+      "default": "57770820370767"
+    },
+    {
+      "type": "text",
+      "id": "product_1_handle",
+      "label": "Handle del producto",
+      "default": "magnesio-con-vitamina-c"
+    },
+    {
+      "type": "checkbox",
+      "id": "product_1_soldout",
+      "label": "Marcar como agotado",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Producto 2 — Magnesio + Colágeno"
+    },
+    {
+      "type": "product",
+      "id": "product_2",
+      "label": "Producto de Shopify (opcional)"
+    },
+    {
+      "type": "image_picker",
+      "id": "product_2_image",
+      "label": "Imagen"
+    },
+    {
+      "type": "text",
+      "id": "product_2_price",
+      "label": "Precio (manual)",
+      "default": "14,90€"
+    },
+    {
+      "type": "text",
+      "id": "product_2_variant_id",
+      "label": "Variant ID",
+      "default": "57770818502991"
+    },
+    {
+      "type": "text",
+      "id": "product_2_handle",
+      "label": "Handle del producto",
+      "default": "magnesio-con-colageno"
+    },
+    {
+      "type": "checkbox",
+      "id": "product_2_soldout",
+      "label": "Marcar como agotado",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Producto 3 — Aceite de Magnesio"
+    },
+    {
+      "type": "product",
+      "id": "product_3",
+      "label": "Producto de Shopify (opcional)"
+    },
+    {
+      "type": "image_picker",
+      "id": "product_3_image",
+      "label": "Imagen"
+    },
+    {
+      "type": "text",
+      "id": "product_3_price",
+      "label": "Precio (manual)",
+      "default": "14,90€"
+    },
+    {
+      "type": "text",
+      "id": "product_3_variant_id",
+      "label": "Variant ID",
+      "default": "57770818175311"
+    },
+    {
+      "type": "text",
+      "id": "product_3_handle",
+      "label": "Handle del producto",
+      "default": "aceite-de-magnesio"
+    },
+    {
+      "type": "checkbox",
+      "id": "product_3_soldout",
+      "label": "Marcar como agotado",
+      "default": true,
+      "info": "Actívalo mientras el producto esté agotado o a 0,00€ en Shopify."
+    },
+    {
+      "type": "header",
+      "content": "Pack 1 unidad"
+    },
+    {
+      "type": "image_picker",
+      "id": "pack_1_image",
+      "label": "Imagen"
+    },
+    {
+      "type": "text",
+      "id": "pack_1_price",
+      "label": "Precio",
+      "default": "14,90€"
+    },
+    {
+      "type": "text",
+      "id": "pack_1_perunit",
+      "label": "Precio por unidad",
+      "default": "14,90€/unidad"
+    },
+    {
+      "type": "text",
+      "id": "pack_1_variant_id",
+      "label": "Variant ID",
+      "default": "57770820370767"
+    },
+    {
+      "type": "header",
+      "content": "Pack 4 unidades (destacado)"
+    },
+    {
+      "type": "image_picker",
+      "id": "pack_4_image",
+      "label": "Imagen"
+    },
+    {
+      "type": "text",
+      "id": "pack_4_price",
+      "label": "Precio",
+      "default": "49,90€"
+    },
+    {
+      "type": "text",
+      "id": "pack_4_perunit",
+      "label": "Precio por unidad",
+      "default": "12,48€/unidad"
+    },
+    {
+      "type": "text",
+      "id": "pack_4_savings",
+      "label": "Ahorro",
+      "default": "Ahorras 9,70€"
+    },
+    {
+      "type": "text",
+      "id": "pack_4_variant_id",
+      "label": "Variant ID",
+      "info": "Crea el producto/variante del pack en Shopify y pega aquí su Variant ID. Vacío = botón \"Próximamente\"."
+    },
+    {
+      "type": "header",
+      "content": "Pack 6 unidades"
+    },
+    {
+      "type": "image_picker",
+      "id": "pack_6_image",
+      "label": "Imagen"
+    },
+    {
+      "type": "text",
+      "id": "pack_6_price",
+      "label": "Precio",
+      "default": "69,90€"
+    },
+    {
+      "type": "text",
+      "id": "pack_6_perunit",
+      "label": "Precio por unidad",
+      "default": "11,65€/unidad"
+    },
+    {
+      "type": "text",
+      "id": "pack_6_savings",
+      "label": "Ahorro",
+      "default": "Ahorras 19,50€"
+    },
+    {
+      "type": "text",
+      "id": "pack_6_variant_id",
+      "label": "Variant ID",
+      "info": "Crea el producto/variante del pack en Shopify y pega aquí su Variant ID. Vacío = botón \"Próximamente\"."
+    },
+    {
+      "type": "header",
+      "content": "Imágenes — Beneficios"
+    },
+    {
+      "type": "image_picker",
+      "id": "benefits_image_main",
+      "label": "Imagen principal"
+    },
+    {
+      "type": "image_picker",
+      "id": "benefits_image_a",
+      "label": "Imagen flotante (abajo-derecha)"
+    },
+    {
+      "type": "image_picker",
+      "id": "benefits_image_b",
+      "label": "Imagen flotante (arriba-izquierda)"
+    },
+    {
+      "type": "header",
+      "content": "Imágenes — Vida Activa"
+    },
+    {
+      "type": "image_picker",
+      "id": "life_image_1",
+      "label": "Imagen grande (Vida en familia)"
+    },
+    {
+      "type": "image_picker",
+      "id": "life_image_2",
+      "label": "Imagen 2 (Activos cada día)"
+    },
+    {
+      "type": "image_picker",
+      "id": "life_image_3",
+      "label": "Imagen 3 (La gama completa)"
+    },
+    {
+      "type": "header",
+      "content": "General"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_nav",
+      "label": "Mostrar barra de navegación propia",
+      "default": true,
+      "info": "Desactívala si usas el header del tema para evitar duplicados."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_footer",
+      "label": "Mostrar footer propio",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "MSI Landing"
+    }
+  ]
+}
+{% endschema %}
