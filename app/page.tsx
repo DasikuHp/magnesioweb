@@ -13,14 +13,6 @@ const ScrollytellingCanvas = dynamic(
 export default function Home() {
   return (
     <main style={{ background: "#050505" }}>
-      <svg style={{display:'none'}} aria-hidden="true">
-        <defs>
-          <filter id="usm-sharp" x="0%" y="0%" width="100%" height="100%" colorInterpolationFilters="sRGB">
-            <feGaussianBlur stdDeviation="0.6" result="blur"/>
-            <feComposite in="SourceGraphic" in2="blur" operator="arithmetic" k1="0" k2="1.4" k3="-0.4" k4="0" result="sharpened"/>
-          </filter>
-        </defs>
-      </svg>
       <Nav />
       <ScrollytellingCanvas />
       <ProductsSection />
@@ -37,15 +29,6 @@ export default function Home() {
 function GlassButton() {
   const { active, toggle } = useGlassMode();
 
-  const handleGlassToggle = () => {
-    toggle();
-    if (!active) {
-      document.body.classList.add('glass-active');
-    } else {
-      document.body.classList.remove('glass-active');
-    }
-  };
-
   useEffect(() => {
     return glassModeStore.subscribe((isActive) => {
       if (isActive) {
@@ -58,7 +41,7 @@ function GlassButton() {
 
   return (
     <button
-      onClick={handleGlassToggle}
+      onClick={toggle}
       style={{
         position: 'fixed',
         bottom: '28px',
@@ -69,10 +52,9 @@ function GlassButton() {
         borderRadius: '50%',
         border: 'none',
         cursor: 'pointer',
-        backgroundImage: active
+        background: active
           ? 'conic-gradient(from 180deg at 50% 50%, #ff6ec7 0deg, #7873f5 72deg, #4bc9f0 144deg, #72f5a1 216deg, #f5e642 288deg, #ff6ec7 360deg)'
           : 'rgba(255,255,255,0.08)',
-        background: active ? undefined : 'rgba(255,255,255,0.08)',
         boxShadow: active
           ? '0 0 20px rgba(120,115,245,0.6), inset 0 0 0 1px rgba(255,255,255,0.2)'
           : 'inset 0 0 0 1px rgba(255,255,255,0.15), 0 4px 16px rgba(0,0,0,0.4)',
