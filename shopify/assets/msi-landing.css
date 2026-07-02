@@ -1,0 +1,1219 @@
+/* ============================================================
+   MSI Landing — CSS autocontenido para sección Shopify
+   Convertido desde TailwindCSS (Next.js) a CSS plano.
+   Todo va prefijado con .msi- para no chocar con el tema.
+   Variables de color: se inyectan desde {% style %} en la sección
+   (--msi-orange, --msi-green, --msi-gold, --msi-navy,
+    --msi-hero-accent, --msi-hero-glow).
+   ============================================================ */
+
+/* ---------- Raíz / reset local ---------- */
+.msi-landing {
+  /* Full-bleed: rompe contenedores del tema con ancho limitado */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  background: #050505;
+  color: #fff;
+  font-family: "Inter", "SF Pro Display", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+}
+.msi-landing *,
+.msi-landing *::before,
+.msi-landing *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+.msi-landing img {
+  max-width: 100%;
+  display: block;
+}
+.msi-landing a {
+  text-decoration: none;
+  color: inherit;
+}
+.msi-landing ul {
+  list-style: none;
+}
+
+/* ---------- Navegación fija ---------- */
+.msi-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 68px;
+  padding: 0 2rem;
+  background: rgba(5, 5, 5, 0.85);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.msi-nav-logo {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+.msi-nav-logo-title {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  color: rgba(255, 255, 255, 0.9);
+}
+.msi-nav-logo-title .msi-accent {
+  color: var(--msi-orange);
+}
+.msi-nav-logo-sub {
+  font-size: 0.55rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+}
+.msi-nav-menu {
+  display: none;
+  align-items: center;
+  gap: 2rem;
+}
+.msi-nav-menu a {
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  color: rgba(255, 255, 255, 0.6);
+  transition: color 0.2s;
+}
+.msi-nav-menu a:hover {
+  color: #fff;
+}
+.msi-nav-cta {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  padding: 0.625rem 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 0 8px 0 rgba(255, 255, 255, 0.1),
+    0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  transition: all 0.3s;
+}
+.msi-nav-cta:hover {
+  transform: scale(1.05) translateY(-2px);
+}
+.msi-nav-cta svg {
+  transition: transform 0.2s;
+}
+.msi-nav-cta:hover svg {
+  transform: translateX(4px);
+}
+/* Brillo que barre el botón al hacer hover */
+.msi-nav-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transform: translateX(-150%);
+  transition: transform 0.7s ease-in-out;
+}
+.msi-nav-cta:hover::before {
+  transform: translateX(150%);
+}
+
+@media (min-width: 768px) {
+  .msi-nav {
+    padding: 0 4rem;
+  }
+  .msi-nav-menu {
+    display: flex;
+  }
+}
+
+/* ---------- Pantalla de carga ---------- */
+.msi-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  background: #050505;
+  transition: opacity 0.5s ease;
+}
+.msi-loader[hidden] {
+  display: none;
+}
+.msi-loader.is-leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+.msi-loader-logo {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+.msi-loader-logo-main {
+  font-size: 3rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  color: var(--msi-orange);
+}
+.msi-loader-logo-sub {
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.7);
+  margin-left: 0.25rem;
+}
+.msi-loader-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 16rem;
+}
+.msi-loader-bar {
+  width: 100%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  border-radius: 9999px;
+}
+.msi-loader-bar-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 0%;
+  background: var(--msi-orange);
+  transition: width 0.2s;
+}
+.msi-loader-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.3);
+}
+.msi-loader-dots {
+  display: flex;
+  gap: 0.25rem;
+}
+.msi-loader-dots span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  animation: msiPulse 1.2s ease-in-out infinite;
+}
+.msi-loader-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.msi-loader-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes msiPulse {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.4);
+  }
+}
+
+/* ---------- Hero scrollytelling ---------- */
+.msi-hero {
+  height: 500vh;
+  position: relative;
+}
+.msi-hero-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+.msi-hero-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #050505;
+}
+/* Viñeta perceptual encima del canvas */
+.msi-hero-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 80% 80% at 50% 50%,
+    transparent 55%,
+    rgba(0, 0, 0, 0.25) 75%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+}
+/* Textura de ruido SVG (fractalNoise) con mezcla overlay */
+.msi-hero-noise {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0.06;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E");
+}
+
+/* ---------- Beats de texto ---------- */
+.msi-beat {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 2rem;
+  pointer-events: none;
+  opacity: 0;
+  will-change: opacity, transform;
+}
+.msi-beat--left {
+  align-items: flex-start;
+  text-align: left;
+}
+.msi-beat--right {
+  align-items: flex-end;
+  text-align: right;
+}
+.msi-beat--center {
+  align-items: center;
+  text-align: center;
+}
+/* Sin JS solo se ve el beat A (fallback elegante) */
+.msi-beat--a {
+  opacity: 1;
+}
+.msi-beat-tag {
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  color: var(--msi-hero-accent);
+}
+.msi-beat--a .msi-beat-tag {
+  margin-bottom: 1.5rem;
+}
+.msi-beat--d .msi-beat-tag {
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 0 20px var(--msi-hero-glow);
+}
+.msi-beat-title {
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.92);
+}
+.msi-beat--a .msi-beat-title {
+  font-size: 4.5rem;
+  max-width: 20rem;
+}
+.msi-beat--b .msi-beat-title,
+.msi-beat--c .msi-beat-title {
+  font-size: 3.75rem;
+}
+.msi-beat--d .msi-beat-title {
+  font-size: 4.5rem;
+  text-shadow: 0 0 40px rgba(0, 0, 0, 0.95), 0 2px 8px rgba(0, 0, 0, 1);
+}
+.msi-beat-sub {
+  font-size: 1.125rem;
+  font-weight: 300;
+  margin-top: 1.25rem;
+  max-width: 20rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+.msi-beat--a .msi-beat-sub {
+  margin-top: 1.5rem;
+}
+.msi-beat--d .msi-beat-sub {
+  font-size: 1.25rem;
+  max-width: none;
+  margin-top: 1rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+}
+.msi-beat-cta {
+  margin-top: 2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 1rem 2rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), 0 4px 24px rgba(0, 0, 0, 0.8);
+  background-color: rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s;
+  pointer-events: auto;
+}
+.msi-beat-cta:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+@media (min-width: 768px) {
+  .msi-beat {
+    padding: 0 4rem;
+  }
+  .msi-beat--a .msi-beat-title {
+    font-size: 6rem;
+  }
+  .msi-beat--b .msi-beat-title,
+  .msi-beat--c .msi-beat-title {
+    font-size: 4.5rem;
+  }
+  .msi-beat--d .msi-beat-title {
+    font-size: 6rem;
+  }
+  .msi-beat--b .msi-beat-sub,
+  .msi-beat--c .msi-beat-sub {
+    font-size: 1.25rem;
+  }
+  .msi-beat--d .msi-beat-sub {
+    font-size: 1.5rem;
+  }
+}
+@media (min-width: 1024px) {
+  .msi-beat {
+    padding: 0 6rem;
+  }
+  .msi-beat--b .msi-beat-title,
+  .msi-beat--c .msi-beat-title {
+    font-size: 6rem;
+  }
+  .msi-beat--d .msi-beat-title {
+    font-size: 8rem;
+  }
+}
+
+/* ---------- Hint de scroll ---------- */
+.msi-hero-hint {
+  position: absolute;
+  bottom: 2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  pointer-events: none;
+}
+.msi-hero-hint-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.3);
+}
+.msi-hero-hint-line {
+  width: 1px;
+  height: 2.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+.msi-hero-hint-line::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 40%;
+  background: var(--msi-orange);
+  animation: msiScrollRun 2s ease-in-out infinite;
+}
+@keyframes msiScrollRun {
+  0% {
+    top: -40%;
+  }
+  100% {
+    top: 140%;
+  }
+}
+
+/* ---------- Fallback móvil del hero (sin canvas) ---------- */
+.msi-hero-mobile {
+  display: none;
+}
+@media (max-width: 767px), (prefers-reduced-motion: reduce) {
+  .msi-hero {
+    height: auto;
+  }
+  .msi-hero-sticky {
+    position: relative;
+    height: 100vh;
+    min-height: 560px;
+  }
+  .msi-hero-canvas,
+  .msi-beat,
+  .msi-hero-hint,
+  .msi-loader {
+    display: none !important;
+  }
+  .msi-hero-mobile {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    position: absolute;
+    inset: 0;
+    padding: 5rem 2rem 4rem;
+    z-index: 2;
+    background: linear-gradient(
+      to top,
+      rgba(5, 5, 5, 0.9) 0%,
+      rgba(5, 5, 5, 0.2) 55%,
+      rgba(5, 5, 5, 0.6) 100%
+    );
+  }
+}
+.msi-hero-mobile-img {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+.msi-hero-mobile-img img,
+.msi-hero-mobile-img svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 3rem 1.5rem;
+}
+.msi-hero-mobile .msi-beat-tag {
+  margin-bottom: 1rem;
+}
+.msi-hero-mobile .msi-beat-title {
+  font-size: 3.5rem;
+}
+.msi-hero-mobile-price {
+  font-size: 2rem;
+  font-weight: 900;
+  margin-top: 1rem;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* ---------- Secciones genéricas ---------- */
+.msi-section {
+  padding: 7rem 2rem;
+}
+.msi-container {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+.msi-container--md {
+  max-width: 64rem;
+}
+.msi-section-head {
+  text-align: center;
+  margin-bottom: 5rem;
+}
+.msi-eyebrow {
+  display: block;
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--msi-orange);
+}
+.msi-h2 {
+  font-size: 2.25rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 1.25rem;
+}
+.msi-section-sub {
+  color: rgba(255, 255, 255, 0.5);
+  max-width: 32rem;
+  margin: 0 auto;
+  line-height: 1.625;
+}
+@media (min-width: 768px) {
+  .msi-section {
+    padding: 7rem 4rem;
+  }
+  .msi-h2 {
+    font-size: 3rem;
+  }
+}
+
+/* ---------- Productos ---------- */
+.msi-products {
+  background: #080808;
+}
+.msi-products-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+@media (min-width: 768px) {
+  .msi-products-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.msi-product-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: #0f0f0f;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: transform 0.5s;
+}
+.msi-product-card:hover {
+  transform: translateY(-8px);
+}
+.msi-product-media {
+  position: relative;
+  height: 280px;
+}
+.msi-product-media--1 {
+  background: #0d0804;
+}
+.msi-product-media--2 {
+  background: #060d04;
+}
+.msi-product-media--3 {
+  background: #0a0a08;
+}
+.msi-product-media img,
+.msi-product-media svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 2rem;
+  transition: transform 0.5s;
+}
+.msi-product-card:hover .msi-product-media img {
+  transform: scale(1.05);
+}
+.msi-product-tag {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  color: #fff;
+}
+.msi-product-tag--1 {
+  background: var(--msi-orange);
+}
+.msi-product-tag--2 {
+  background: var(--msi-green);
+}
+.msi-product-tag--3 {
+  background: var(--msi-gold);
+}
+.msi-product-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 1.75rem;
+}
+.msi-product-line {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 0.5rem;
+}
+.msi-product-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.75rem;
+  line-height: 1.25;
+}
+.msi-product-desc {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.625;
+  flex: 1;
+}
+.msi-product-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+}
+.msi-product-price {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.9);
+}
+.msi-product-price small {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.4);
+}
+.msi-buy-btn {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  padding: 0.625rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+.msi-buy-btn:hover {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+.msi-buy-btn--1 {
+  background: var(--msi-orange);
+}
+.msi-buy-btn--2 {
+  background: var(--msi-green);
+}
+.msi-buy-btn--3 {
+  background: var(--msi-gold);
+}
+.msi-buy-btn.is-soldout {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: not-allowed;
+}
+.msi-buy-btn.is-soldout:hover {
+  transform: none;
+  opacity: 1;
+}
+
+/* ---------- Packs ---------- */
+.msi-packs {
+  background: linear-gradient(180deg, #080808 0%, var(--msi-navy) 100%);
+}
+.msi-packs-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  align-items: center;
+}
+@media (min-width: 768px) {
+  .msi-packs-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.msi-pack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-radius: 1rem;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.5s;
+}
+.msi-pack--featured {
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  transform: scale(1.05);
+}
+@media (min-width: 768px) {
+  .msi-pack--featured {
+    transform: scale(1.1);
+  }
+}
+.msi-pack-badge {
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 0.375rem 1rem;
+  border-radius: 9999px;
+  color: #fff;
+  margin-bottom: 1.5rem;
+  background: var(--msi-orange);
+  box-shadow: 0 4px 16px rgba(232, 98, 10, 0.35);
+}
+.msi-pack-qty {
+  font-size: 3.75rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #fff;
+}
+.msi-pack--featured .msi-pack-qty {
+  color: var(--msi-navy);
+}
+.msi-pack-qty span {
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+.msi-pack--featured .msi-pack-qty span {
+  color: #9ca3af;
+}
+.msi-pack-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin: 0.25rem 0 1.5rem;
+  color: rgba(255, 255, 255, 0.3);
+}
+.msi-pack--featured .msi-pack-label {
+  color: #9ca3af;
+}
+.msi-pack-img {
+  position: relative;
+  height: 10rem;
+  width: 100%;
+  margin-bottom: 1.25rem;
+}
+.msi-pack-img img,
+.msi-pack-img svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.msi-pack-savings {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--msi-green);
+  margin-bottom: 0.5rem;
+}
+.msi-pack-price {
+  font-size: 2.25rem;
+  font-weight: 900;
+  margin: 0.25rem 0;
+  color: #fff;
+}
+.msi-pack--featured .msi-pack-price {
+  color: var(--msi-navy);
+}
+.msi-pack-perunit {
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  color: rgba(255, 255, 255, 0.3);
+}
+.msi-pack--featured .msi-pack-perunit {
+  color: #9ca3af;
+}
+.msi-pack-shipping {
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+.msi-pack--featured .msi-pack-shipping {
+  color: #6b7280;
+}
+.msi-pack-shipping-free {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  color: #fff;
+  background: var(--msi-green);
+}
+.msi-pack-btn {
+  display: block;
+  width: 100%;
+  padding: 0.875rem 0;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: center;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.2s;
+}
+.msi-pack-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.msi-pack-btn--featured {
+  border: none;
+  background: var(--msi-orange);
+  box-shadow: 0 8px 24px rgba(232, 98, 10, 0.35);
+}
+.msi-pack-btn.is-pending {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.msi-pack-btn.is-pending:hover {
+  transform: none;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ---------- Beneficios ---------- */
+.msi-benefits {
+  background: #080808;
+}
+.msi-benefits-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+@media (min-width: 768px) {
+  .msi-benefits-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.msi-benefits-visual {
+  position: relative;
+}
+.msi-benefits-main {
+  border-radius: 1rem;
+  overflow: hidden;
+  height: 520px;
+}
+.msi-benefits-main img,
+.msi-benefits-main svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.msi-benefits-float {
+  position: absolute;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.06);
+}
+.msi-benefits-float img,
+.msi-benefits-float svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.msi-benefits-float--br {
+  bottom: -2rem;
+  right: -2rem;
+  width: 11rem;
+  height: 9rem;
+}
+.msi-benefits-float--tl {
+  top: -1.5rem;
+  left: -1.5rem;
+  width: 9rem;
+  height: 7rem;
+  z-index: 1;
+}
+.msi-benefits-copy .msi-h2 {
+  font-size: 1.875rem;
+  line-height: 1.25;
+}
+@media (min-width: 768px) {
+  .msi-benefits-copy .msi-h2 {
+    font-size: 2.25rem;
+  }
+}
+.msi-benefits-copy > p {
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.625;
+  margin-bottom: 2.5rem;
+}
+.msi-benefit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.msi-benefit {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  transition: background 0.2s;
+}
+.msi-benefit:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+.msi-benefit-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+.msi-benefit-title {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+}
+.msi-benefit-desc {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.625;
+}
+
+/* ---------- Lifestyle ---------- */
+.msi-lifestyle {
+  background: #060606;
+}
+.msi-lifestyle .msi-section-head {
+  margin-bottom: 4rem;
+}
+.msi-lifestyle-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+@media (min-width: 768px) {
+  .msi-lifestyle-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.msi-lifestyle-item {
+  position: relative;
+  border-radius: 1rem;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+}
+.msi-lifestyle-item--large {
+  grid-column: span 2;
+  aspect-ratio: 3 / 4;
+}
+@media (min-width: 768px) {
+  .msi-lifestyle-item--large {
+    grid-column: span 1;
+    grid-row: span 2;
+  }
+}
+.msi-lifestyle-item img,
+.msi-lifestyle-item svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.7s;
+}
+.msi-lifestyle-item:hover img {
+  transform: scale(1.05);
+}
+.msi-lifestyle-overlay {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+  display: flex;
+  align-items: flex-end;
+  padding: 1.25rem;
+  background: linear-gradient(to top, rgba(5, 5, 5, 0.75) 0%, transparent 50%);
+}
+.msi-lifestyle-item:hover .msi-lifestyle-overlay {
+  opacity: 1;
+}
+.msi-lifestyle-overlay span {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #fff;
+}
+
+/* ---------- Newsletter ---------- */
+.msi-newsletter {
+  padding: 5rem 2rem;
+  text-align: center;
+  background: linear-gradient(135deg, var(--msi-orange) 0%, #c44d00 100%);
+}
+@media (min-width: 768px) {
+  .msi-newsletter {
+    padding: 5rem 4rem;
+  }
+}
+.msi-newsletter h2 {
+  font-size: 1.875rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  color: #fff;
+  margin-bottom: 0.75rem;
+}
+@media (min-width: 768px) {
+  .msi-newsletter h2 {
+    font-size: 2.25rem;
+  }
+}
+.msi-newsletter p {
+  color: rgba(255, 255, 255, 0.75);
+  margin-bottom: 2.5rem;
+  font-size: 1.125rem;
+}
+.msi-newsletter-form {
+  display: flex;
+  max-width: 28rem;
+  margin: 0 auto;
+  gap: 0.75rem;
+}
+.msi-newsletter-form input[type="email"] {
+  flex: 1;
+  min-width: 0;
+  padding: 0.875rem 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  border: none;
+  outline: none;
+  background: rgba(255, 255, 255, 0.95);
+  color: #111;
+}
+.msi-newsletter-form button {
+  padding: 0.875rem 1.5rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-family: inherit;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  background: var(--msi-navy);
+  transition: all 0.2s;
+}
+.msi-newsletter-form button:hover {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+.msi-newsletter-msg {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  padding: 0.875rem 1.25rem;
+}
+.msi-newsletter-error {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  display: inline-block;
+}
+
+/* ---------- Footer ---------- */
+.msi-footer {
+  padding: 4rem 2rem;
+  background: #040404;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+@media (min-width: 768px) {
+  .msi-footer {
+    padding: 4rem 4rem;
+  }
+}
+.msi-footer-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+  margin-bottom: 3.5rem;
+}
+@media (min-width: 768px) {
+  .msi-footer-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.msi-footer-brand-name {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  margin-bottom: 1rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+.msi-footer-brand-name .msi-accent {
+  color: var(--msi-orange);
+}
+.msi-footer-brand p {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.35);
+  line-height: 1.625;
+  max-width: 20rem;
+}
+.msi-footer h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 1.25rem;
+  letter-spacing: 0.025em;
+}
+.msi-footer ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.msi-footer ul a {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.35);
+  transition: color 0.2s;
+}
+.msi-footer ul a:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+.msi-footer-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+@media (min-width: 768px) {
+  .msi-footer-bottom {
+    flex-direction: row;
+  }
+}
+.msi-footer-bottom span {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+/* ---------- Placeholder para imágenes sin asignar ---------- */
+.msi-img-placeholder {
+  width: 100%;
+  height: 100%;
+  background: #1a1a1a;
+  fill: #2e2e2e;
+}

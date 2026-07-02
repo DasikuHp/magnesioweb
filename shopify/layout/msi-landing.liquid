@@ -1,0 +1,31 @@
+{% comment %}
+  Layout mínimo para la landing MSI.
+  Evita el header/footer del tema y cualquier contenedor con
+  overflow que rompería el position:sticky del hero.
+  NO sustituye a theme.liquid: es un layout ADICIONAL que solo
+  usan las plantillas que lo declaren ("layout": "msi-landing").
+{% endcomment %}<!doctype html>
+<html lang="{{ request.locale.iso_code }}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#050505">
+    <title>
+      {{ page_title }}
+      {%- unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless -%}
+    </title>
+    {%- if page_description -%}
+      <meta name="description" content="{{ page_description | escape }}">
+    {%- endif -%}
+    <link rel="canonical" href="{{ canonical_url }}">
+
+    {{ content_for_header }}
+
+    <style>
+      html, body { margin: 0; padding: 0; background: #050505; }
+    </style>
+  </head>
+  <body>
+    {{ content_for_layout }}
+  </body>
+</html>
