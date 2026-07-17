@@ -28,6 +28,15 @@
     assign frames_base = frames_probe | split: '?' | first | replace: 'frame_0001.webp', ''
   endif
 
+  # Versión (cache-buster) de la secuencia clara: el ?v= de asset_url
+  # cambia cuando se reemplaza el archivo, así el navegador/CDN no
+  # sirve frames antiguos tras re-subirlos.
+  assign vb_probe = 'verde-blanco-frame_0001.webp' | asset_url
+  assign frames_v_light = ''
+  if vb_probe contains '?v='
+    assign frames_v_light = vb_probe | split: '?v=' | last
+  endif
+
   # — Producto 1: Magnesio con Vitamina C (naranja) —
   assign p1_obj = all_products[section.settings.product_1]
   assign p1_price = section.settings.product_1_price
@@ -89,30 +98,61 @@
     --msi-orange: {{ section.settings.accent_orange }};
     --msi-green: {{ section.settings.accent_green }};
     --msi-gold: {{ section.settings.accent_gold }};
+    --msi-teal: {{ section.settings.accent_teal | default: '#00c4cf' }};
+    --msi-teal-ink: #007c85; /* variante apta para texto pequeño sobre fondo claro (~4.8:1) */
     --msi-navy: #0f1e3d;
-    --msi-hero-accent: {{ section.settings.accent_orange }};
-    --msi-hero-glow: {{ section.settings.accent_orange | color_modify: 'alpha', 0.8 }};
+    --msi-hero-accent: {{ section.settings.accent_green }};
+    --msi-hero-glow: {{ section.settings.accent_green | color_modify: 'alpha', 0.8 }};
   }
 {% endstyle %}
 
 <div
-  class="msi-landing"
+  class="msi-landing{% if section.settings.color_mode == 'light' %} msi-landing--light{% endif %}"
   data-msi-landing
+  data-color-mode="{{ section.settings.color_mode | default: 'dark' }}"
   data-frames-base="{{ frames_base }}"
+  data-frames-v-light="{{ frames_v_light }}"
   data-frame-prefix="{{ section.settings.frames_prefix | default: 'frame_' }}"
   data-frame-ext=".webp"
   data-frame-count="121"
+  data-mobile-scrolly="{% if section.settings.enable_mobile_scrollytelling == false %}false{% else %}true{% endif %}"
 >
+  {%- comment -%} Interruptor claro/oscuro (estilo iOS: pastilla + botón deslizante) {%- endcomment -%}
+  <button
+    class="msi-mode-toggle"
+    data-msi-mode-toggle
+    type="button"
+    role="switch"
+    aria-checked="{% if section.settings.color_mode == 'light' %}true{% else %}false{% endif %}"
+    aria-label="Cambiar entre modo claro y oscuro"
+  >
+    <span class="msi-mode-toggle-knob">
+      <svg class="msi-mode-icon msi-mode-icon--sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4.2"/>
+        <path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/>
+      </svg>
+      <svg class="msi-mode-icon msi-mode-icon--moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M14.5 3.5a8 8 0 1 0 6 10.5 6.5 6.5 0 0 1-6-10.5z"/>
+        <path d="M18.2 5.2v3M16.7 6.7h3" stroke-width="1.5"/>
+      </svg>
+    </span>
+  </button>
+
   {%- if section.settings.show_nav -%}
     <nav class="msi-nav">
       <a href="#" class="msi-nav-logo">
-        <span class="msi-nav-logo-title"><span class="msi-accent">MSI</span> Sport</span>
-        <span class="msi-nav-logo-sub">magnesionatural.com</span>
+        {%- if section.settings.logo_image -%}
+          {{ section.settings.logo_image | image_url: width: 320 | image_tag: class: 'msi-logo-img', alt: 'MSI Magnesio Natural' }}
+        {%- else -%}
+          <img class="msi-logo-img" src="{{ 'msi-logo.png' | asset_url }}" alt="MSI Magnesio Natural" width="662" height="377">
+        {%- endif -%}
+        <span class="msi-nav-logo-sub">magnesionatural.es</span>
       </a>
       <ul class="msi-nav-menu">
         <li><a href="#productos">Productos</a></li>
         <li><a href="#packs">Packs</a></li>
         <li><a href="#beneficios">Beneficios</a></li>
+        <li><a href="#para-quien">Para quién</a></li>
         <li><a href="#nosotros">Nosotros</a></li>
       </ul>
       <a href="#packs" class="msi-nav-cta">
@@ -127,8 +167,11 @@
   {%- comment -%} Pantalla de carga (JS la muestra solo en escritorio) {%- endcomment -%}
   <div class="msi-loader" data-msi-loader hidden>
     <div class="msi-loader-logo">
-      <span class="msi-loader-logo-main">MSI</span>
-      <span class="msi-loader-logo-sub">Sport</span>
+      {%- if section.settings.logo_image -%}
+        {{ section.settings.logo_image | image_url: width: 480 | image_tag: class: 'msi-logo-img msi-logo-img--loader', alt: 'MSI Magnesio Natural' }}
+      {%- else -%}
+        <img class="msi-logo-img msi-logo-img--loader" src="{{ 'msi-logo.png' | asset_url }}" alt="MSI Magnesio Natural" width="662" height="377">
+      {%- endif -%}
     </div>
     <div class="msi-loader-bar-wrap">
       <div class="msi-loader-bar">
@@ -143,6 +186,7 @@
   <div class="msi-hero" data-msi-hero>
     <div class="msi-hero-sticky">
       <canvas class="msi-hero-canvas" data-msi-canvas></canvas>
+      <div class="msi-aurora msi-aurora--hero" aria-hidden="true"></div>
       <div class="msi-hero-vignette"></div>
       <div class="msi-hero-noise"></div>
 
@@ -194,7 +238,7 @@
           {%- elsif section.settings.product_1_image -%}
             {{ section.settings.product_1_image | image_url: width: 900 | image_tag: loading: 'eager', alt: section.settings.beat_a_tag }}
           {%- else -%}
-            {{ 'product-1' | placeholder_svg_tag: 'msi-img-placeholder' }}
+            <img src="{{ 'hero-mobile.webp' | asset_url }}" alt="{{ section.settings.beat_a_tag }}" width="369" height="675" loading="eager">
           {%- endif -%}
         </div>
         <span class="msi-beat-tag">{{ section.settings.beat_a_tag }}</span>
@@ -213,8 +257,9 @@
 
   {%- comment -%} ===== PRODUCTOS ===== {%- endcomment -%}
   <section id="productos" class="msi-section msi-products">
+    <div class="msi-aurora" aria-hidden="true"></div>
     <div class="msi-container">
-      <div class="msi-section-head">
+      <div class="msi-section-head" data-msi-reveal>
         <span class="msi-eyebrow">Nuestra Gama</span>
         <h2 class="msi-h2">Los tres pilares del magnesio MSI</h2>
         <p class="msi-section-sub">
@@ -225,15 +270,14 @@
 
       <div class="msi-products-grid">
         {%- comment -%} Producto 1 — Magnesio Natural con Vitamina C {%- endcomment -%}
-        <div class="msi-product-card">
+        <div class="msi-product-card" data-msi-reveal>
           <div class="msi-product-media msi-product-media--1">
             <span class="msi-product-tag msi-product-tag--1">⚡ Más Vendido</span>
+            {%- comment -%} Packshot del tema por defecto; el picker de producto solo aporta precio/stock/enlace. Para cambiar la foto: ajuste "Imagen" en el editor. {%- endcomment -%}
             {%- if section.settings.product_1_image -%}
               {{ section.settings.product_1_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: 'Magnesio Natural con Vitamina C' }}
-            {%- elsif p1_obj != blank and p1_obj.featured_image -%}
-              {{ p1_obj.featured_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: p1_obj.featured_image.alt }}
             {%- else -%}
-              {{ 'product-1' | placeholder_svg_tag: 'msi-img-placeholder' }}
+              <img src="{{ 'producto-1-hero.webp' | asset_url }}" alt="Magnesio Natural con Vitamina C" width="369" height="675" loading="lazy">
             {%- endif -%}
           </div>
           <div class="msi-product-body">
@@ -257,15 +301,13 @@
         </div>
 
         {%- comment -%} Producto 2 — Magnesio con Colágeno {%- endcomment -%}
-        <div class="msi-product-card">
+        <div class="msi-product-card" data-msi-reveal>
           <div class="msi-product-media msi-product-media--2">
             <span class="msi-product-tag msi-product-tag--2">🌿 Articulaciones</span>
             {%- if section.settings.product_2_image -%}
               {{ section.settings.product_2_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: 'Magnesio con Colágeno' }}
-            {%- elsif p2_obj != blank and p2_obj.featured_image -%}
-              {{ p2_obj.featured_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: p2_obj.featured_image.alt }}
             {%- else -%}
-              {{ 'product-2' | placeholder_svg_tag: 'msi-img-placeholder' }}
+              <img src="{{ 'producto-2-hero.webp' | asset_url }}" alt="Magnesio con Colágeno" width="354" height="705" loading="lazy">
             {%- endif -%}
           </div>
           <div class="msi-product-body">
@@ -289,15 +331,13 @@
         </div>
 
         {%- comment -%} Producto 3 — Aceite de Magnesio en Spray {%- endcomment -%}
-        <div class="msi-product-card">
+        <div class="msi-product-card" data-msi-reveal>
           <div class="msi-product-media msi-product-media--3">
             <span class="msi-product-tag msi-product-tag--3">✨ Acción rápida</span>
             {%- if section.settings.product_3_image -%}
               {{ section.settings.product_3_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: 'Aceite de Magnesio Spray' }}
-            {%- elsif p3_obj != blank and p3_obj.featured_image -%}
-              {{ p3_obj.featured_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: p3_obj.featured_image.alt }}
             {%- else -%}
-              {{ 'product-3' | placeholder_svg_tag: 'msi-img-placeholder' }}
+              <img src="{{ 'producto-3-hero.webp' | asset_url }}" alt="Aceite de Magnesio Spray" width="800" height="800" loading="lazy">
             {%- endif -%}
           </div>
           <div class="msi-product-body">
@@ -323,10 +363,49 @@
     </div>
   </section>
 
+  {%- comment -%} ===== VÍDEO PROMOCIONAL ===== {%- endcomment -%}
+  {%- if section.settings.show_promo_video -%}
+    {%- liquid
+      # Mismo patrón de fallback que los frames: ajuste vacío = asset del tema.
+      assign promo_file = section.settings.promo_video_asset | strip
+      if promo_file == blank
+        assign promo_file = 'msi-anuncio.mp4'
+      endif
+    -%}
+    <section class="msi-promo" data-msi-promo aria-label="Vídeo promocional MSI">
+      <div class="msi-promo-frame">
+        <video
+          class="msi-promo-video"
+          data-msi-promo-video
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          poster="{{ 'msi-anuncio-poster.webp' | asset_url }}"
+        >
+          <source src="{{ promo_file | asset_url }}" type="video/mp4">
+        </video>
+        <div class="msi-promo-grain"></div>
+        {%- comment -%} Overlay solo si el usuario escribe texto en el editor: el anuncio ya trae su propia tipografía integrada. {%- endcomment -%}
+        {%- if section.settings.promo_video_eyebrow != blank or section.settings.promo_video_title != blank -%}
+          <div class="msi-promo-overlay">
+            {%- if section.settings.promo_video_eyebrow != blank -%}
+              <span class="msi-eyebrow msi-promo-eyebrow">{{ section.settings.promo_video_eyebrow }}</span>
+            {%- endif -%}
+            {%- if section.settings.promo_video_title != blank -%}
+              <h2 class="msi-promo-title">{{ section.settings.promo_video_title }}</h2>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+      </div>
+    </section>
+  {%- endif -%}
+
   {%- comment -%} ===== PACKS ===== {%- endcomment -%}
   <section id="packs" class="msi-section msi-packs">
+    <div class="msi-aurora" aria-hidden="true"></div>
     <div class="msi-container msi-container--md">
-      <div class="msi-section-head">
+      <div class="msi-section-head" data-msi-reveal>
         <span class="msi-eyebrow">Ahorra con Packs</span>
         <h2 class="msi-h2">Elige tu pack y ahorra</h2>
         <p class="msi-section-sub">
@@ -337,14 +416,14 @@
 
       <div class="msi-packs-grid">
         {%- comment -%} Pack 1 unidad {%- endcomment -%}
-        <div class="msi-pack">
+        <div class="msi-pack" data-msi-reveal>
           <span class="msi-pack-qty">1<span>ud</span></span>
           <span class="msi-pack-label">Unidad</span>
           <div class="msi-pack-img">
             {%- if section.settings.pack_1_image -%}
               {{ section.settings.pack_1_image | image_url: width: 600 | image_tag: loading: 'lazy', alt: 'Pack 1 unidad' }}
             {%- else -%}
-              {{ 'product-4' | placeholder_svg_tag: 'msi-img-placeholder' }}
+              <img src="{{ 'pack-1.webp' | asset_url }}" alt="Pack 1 unidad" width="262" height="480" loading="lazy">
             {%- endif -%}
           </div>
           <div class="msi-pack-price">{{ section.settings.pack_1_price }}</div>
@@ -358,7 +437,7 @@
         </div>
 
         {%- comment -%} Pack 4 unidades (destacado) {%- endcomment -%}
-        <div class="msi-pack msi-pack--featured">
+        <div class="msi-pack msi-pack--featured" data-msi-reveal>
           <span class="msi-pack-badge">⭐ Más Popular</span>
           <span class="msi-pack-qty">4<span>uds</span></span>
           <span class="msi-pack-label">Pack Familiar</span>
@@ -366,7 +445,7 @@
             {%- if section.settings.pack_4_image -%}
               {{ section.settings.pack_4_image | image_url: width: 600 | image_tag: loading: 'lazy', alt: 'Pack 4 unidades' }}
             {%- else -%}
-              {{ 'product-5' | placeholder_svg_tag: 'msi-img-placeholder' }}
+              <img src="{{ 'pack-4.webp' | asset_url }}" alt="Pack 4 unidades" width="262" height="480" loading="lazy">
             {%- endif -%}
           </div>
           <span class="msi-pack-savings">✅ {{ section.settings.pack_4_savings }}</span>
@@ -381,14 +460,14 @@
         </div>
 
         {%- comment -%} Pack 6 unidades {%- endcomment -%}
-        <div class="msi-pack">
+        <div class="msi-pack" data-msi-reveal>
           <span class="msi-pack-qty">6<span>uds</span></span>
           <span class="msi-pack-label">Pack Total</span>
           <div class="msi-pack-img">
             {%- if section.settings.pack_6_image -%}
               {{ section.settings.pack_6_image | image_url: width: 600 | image_tag: loading: 'lazy', alt: 'Pack 6 unidades' }}
             {%- else -%}
-              {{ 'product-6' | placeholder_svg_tag: 'msi-img-placeholder' }}
+              <img src="{{ 'pack-6.webp' | asset_url }}" alt="Pack 6 unidades" width="262" height="480" loading="lazy">
             {%- endif -%}
           </div>
           <span class="msi-pack-savings">✅ {{ section.settings.pack_6_savings }}</span>
@@ -413,21 +492,21 @@
           {%- if section.settings.benefits_image_main -%}
             {{ section.settings.benefits_image_main | image_url: width: 1200 | image_tag: loading: 'lazy', alt: 'Vida activa con MSI Magnesio' }}
           {%- else -%}
-            {{ 'lifestyle-1' | placeholder_svg_tag: 'msi-img-placeholder' }}
+            <img src="{{ 'vida-4.webp' | asset_url }}" alt="Deportistas descansando tras entrenar con MSI Magnesio con Vitamina C" width="1200" height="896" loading="lazy">
           {%- endif -%}
         </div>
         <div class="msi-benefits-float msi-benefits-float--br">
           {%- if section.settings.benefits_image_a -%}
             {{ section.settings.benefits_image_a | image_url: width: 400 | image_tag: loading: 'lazy', alt: 'Gama completa MSI' }}
           {%- else -%}
-            {{ 'product-1' | placeholder_svg_tag: 'msi-img-placeholder' }}
+            <img src="{{ 'beneficios-a.webp' | asset_url }}" alt="Gama completa MSI" width="400" height="400" loading="lazy">
           {%- endif -%}
         </div>
         <div class="msi-benefits-float msi-benefits-float--tl">
           {%- if section.settings.benefits_image_b -%}
             {{ section.settings.benefits_image_b | image_url: width: 400 | image_tag: loading: 'lazy', alt: 'Vida activa MSI' }}
           {%- else -%}
-            {{ 'lifestyle-2' | placeholder_svg_tag: 'msi-img-placeholder' }}
+            <img src="{{ 'beneficios-b.webp' | asset_url }}" alt="Vida activa MSI" width="400" height="400" loading="lazy">
           {%- endif -%}
         </div>
       </div>
@@ -441,28 +520,28 @@
         </p>
 
         <div class="msi-benefit-list">
-          <div class="msi-benefit">
+          <div class="msi-benefit" data-msi-reveal>
             <div class="msi-benefit-icon" style="background: rgba(232,98,10,0.12)">💪</div>
             <div>
               <div class="msi-benefit-title">Alta biodisponibilidad</div>
               <div class="msi-benefit-desc">Fórmula optimizada para máxima absorción intestinal y transdérmica. Tu cuerpo aprovecha cada miligramo.</div>
             </div>
           </div>
-          <div class="msi-benefit">
+          <div class="msi-benefit" data-msi-reveal>
             <div class="msi-benefit-icon" style="background: rgba(123,193,68,0.12)">🌿</div>
             <div>
               <div class="msi-benefit-title">100% vegano y natural</div>
               <div class="msi-benefit-desc">Cápsulas veganas sin aditivos artificiales. Ingredientes de origen natural certificados.</div>
             </div>
           </div>
-          <div class="msi-benefit">
+          <div class="msi-benefit" data-msi-reveal>
             <div class="msi-benefit-icon" style="background: rgba(255,255,255,0.06)">⚡</div>
             <div>
               <div class="msi-benefit-title">Reduce el cansancio y los calambres</div>
               <div class="msi-benefit-desc">Ideal para estilos de vida activos. Combate la fatiga muscular y mejora la recuperación.</div>
             </div>
           </div>
-          <div class="msi-benefit">
+          <div class="msi-benefit" data-msi-reveal>
             <div class="msi-benefit-icon" style="background: rgba(232,98,10,0.08)">🦴</div>
             <div>
               <div class="msi-benefit-title">Huesos y articulaciones fuertes</div>
@@ -474,10 +553,96 @@
     </div>
   </section>
 
+  {%- comment -%} ===== PARA QUIÉN (bloques de audiencia; también sirven
+       de base para publicidad segmentada). Las "burbujas" de cada bloque
+       usan solo declaraciones autorizadas del anexo del Reglamento (UE)
+       432/2012 para el magnesio — no editar a la ligera. {%- endcomment -%}
+  <section id="para-quien" class="msi-section msi-audiences">
+    <div class="msi-aurora" aria-hidden="true"></div>
+    <div class="msi-container">
+      <div class="msi-section-head" data-msi-reveal>
+        <span class="msi-eyebrow">Para quién</span>
+        <h2 class="msi-h2">Un magnesio para cada etapa</h2>
+        <p class="msi-section-sub">
+          Tres perfiles distintos, una misma base: magnesio natural de alta
+          absorción, formulado para lo que tu cuerpo necesita.
+        </p>
+      </div>
+
+      <div class="msi-audiences-grid">
+        <article class="msi-audience-card" data-msi-reveal>
+          <div class="msi-audience-media">
+            {%- if section.settings.aud_1_image -%}
+              {{ section.settings.aud_1_image | image_url: width: 800 | image_tag: loading: 'lazy', alt: 'Pareja mayor activa paseando' }}
+            {%- else -%}
+              <img src="{{ 'vida-7.webp' | asset_url }}" alt="Pareja mayor estirando en el parque con MSI Magnesio con Colágeno" width="1200" height="896" loading="lazy">
+            {%- endif -%}
+          </div>
+          <div class="msi-audience-body">
+            <h3 class="msi-audience-title">{{ section.settings.aud_1_title | default: 'Bienestar 50+' }}</h3>
+            <p class="msi-audience-desc">{{ section.settings.aud_1_desc | default: 'A partir de los 50, huesos y energía piden refuerzo. El magnesio contribuye al mantenimiento de los huesos y a reducir el cansancio y la fatiga.' }}</p>
+            <ul class="msi-audience-bubbles">
+              <li>Mantenimiento de los huesos</li>
+              <li>Menos cansancio y fatiga</li>
+              <li>Función muscular normal</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="msi-audience-card" data-msi-reveal>
+          <div class="msi-audience-media">
+            {%- if section.settings.aud_2_image -%}
+              {{ section.settings.aud_2_image | image_url: width: 800 | image_tag: loading: 'lazy', alt: 'Deportista entrenando' }}
+            {%- else -%}
+              <img src="{{ 'vida-8.webp' | asset_url }}" alt="Pareja deportista al atardecer en la montaña — MSI Magnesio Natural" width="1200" height="854" loading="lazy">
+            {%- endif -%}
+          </div>
+          <div class="msi-audience-body">
+            <h3 class="msi-audience-title">{{ section.settings.aud_2_title | default: 'Deportistas' }}</h3>
+            <p class="msi-audience-desc">{{ section.settings.aud_2_desc | default: 'Entrena, rinde, recupera. El magnesio contribuye a la función muscular normal, al equilibrio electrolítico y al metabolismo energético normal.' }}</p>
+            <ul class="msi-audience-bubbles">
+              <li>Función muscular normal</li>
+              <li>Equilibrio electrolítico</li>
+              <li>Metabolismo energético</li>
+            </ul>
+          </div>
+        </article>
+
+        {%- if section.settings.show_audience_3 -%}
+          <article class="msi-audience-card" data-msi-reveal>
+            <div class="msi-audience-media">
+              {%- if section.settings.aud_3_image -%}
+                {{ section.settings.aud_3_image | image_url: width: 800 | image_tag: loading: 'lazy', alt: 'Bienestar y equilibrio mineral' }}
+              {%- else -%}
+                <img src="{{ 'vida-2.webp' | asset_url }}" alt="Bienestar y equilibrio mineral en el día a día" width="1200" height="896" loading="lazy">
+              {%- endif -%}
+            </div>
+            <div class="msi-audience-body">
+              <h3 class="msi-audience-title">{{ section.settings.aud_3_title | default: 'Equilibrio mineral' }}</h3>
+              <p class="msi-audience-desc">{{ section.settings.aud_3_desc | default: 'El magnesio contribuye al equilibrio electrolítico y a la función psicológica normal. Si tienes una condición renal, consulta a tu médico antes de tomar cualquier suplemento.' }}</p>
+              <ul class="msi-audience-bubbles">
+                <li>Equilibrio electrolítico</li>
+                <li>Función psicológica normal</li>
+                <li>Proceso de división celular</li>
+              </ul>
+            </div>
+          </article>
+        {%- endif -%}
+      </div>
+
+      <p class="msi-audiences-note">
+        Los complementos alimenticios no sustituyen una dieta variada y
+        equilibrada ni un modo de vida sano. Si tienes una condición médica
+        —incluida insuficiencia renal— consulta a tu médico antes de tomar
+        magnesio.
+      </p>
+    </div>
+  </section>
+
   {%- comment -%} ===== LIFESTYLE ===== {%- endcomment -%}
   <section id="nosotros" class="msi-section msi-lifestyle">
     <div class="msi-container">
-      <div class="msi-section-head">
+      <div class="msi-section-head" data-msi-reveal>
         <span class="msi-eyebrow">Vida Activa</span>
         <h2 class="msi-h2">Para quienes no paran</h2>
         <p class="msi-section-sub">
@@ -487,36 +652,40 @@
       </div>
 
       <div class="msi-lifestyle-grid">
-        <div class="msi-lifestyle-item msi-lifestyle-item--large">
+        <div class="msi-lifestyle-item msi-lifestyle-item--large" data-msi-reveal>
           {%- if section.settings.life_image_1 -%}
             {{ section.settings.life_image_1 | image_url: width: 900 | image_tag: loading: 'lazy', alt: 'Familia activa con MSI' }}
           {%- else -%}
-            {{ 'lifestyle-1' | placeholder_svg_tag: 'msi-img-placeholder' }}
+            <img src="{{ 'vida-1.webp' | asset_url }}" alt="Familia activa con MSI" width="864" height="1216" loading="lazy" class="msi-img-pos-top">
           {%- endif -%}
           <div class="msi-lifestyle-overlay"><span>Vida en familia</span></div>
         </div>
-        <div class="msi-lifestyle-item">
+        <div class="msi-lifestyle-item" data-msi-reveal>
           {%- if section.settings.life_image_2 -%}
             {{ section.settings.life_image_2 | image_url: width: 700 | image_tag: loading: 'lazy', alt: 'Pareja activa en naturaleza' }}
           {%- else -%}
-            {{ 'lifestyle-2' | placeholder_svg_tag: 'msi-img-placeholder' }}
+            <img src="{{ 'vida-5.webp' | asset_url }}" alt="Mujer activa aplicándose Aceite de Magnesio MSI en el jardín" width="1200" height="896" loading="lazy">
           {%- endif -%}
           <div class="msi-lifestyle-overlay"><span>Activos cada día</span></div>
         </div>
-        <div class="msi-lifestyle-item">
+        <div class="msi-lifestyle-item" data-msi-reveal>
           {%- if section.settings.life_image_3 -%}
             {{ section.settings.life_image_3 | image_url: width: 700 | image_tag: loading: 'lazy', alt: 'Gama completa MSI' }}
           {%- else -%}
-            {{ 'product-2' | placeholder_svg_tag: 'msi-img-placeholder' }}
+            <img src="{{ 'vida-6.webp' | asset_url }}" alt="Gama completa MSI sobre mesa de madera" width="1200" height="896" loading="lazy">
           {%- endif -%}
           <div class="msi-lifestyle-overlay"><span>La gama completa</span></div>
         </div>
+      </div>
+
+      <div class="msi-lifestyle-banner" data-msi-reveal>
+        <img src="{{ 'nosotros-banner.webp' | asset_url }}" alt="MSI — Cuidando tu bienestar, cuidando de ti" width="1376" height="768" loading="lazy">
       </div>
     </div>
   </section>
 
   {%- comment -%} ===== NEWSLETTER (formulario nativo de Shopify) ===== {%- endcomment -%}
-  <section class="msi-newsletter">
+  <section class="msi-newsletter" data-msi-reveal>
     <h2>Mantente activo, mantente informado</h2>
     <p>Consejos de bienestar, ofertas exclusivas y novedades MSI directo a tu correo.</p>
     {%- form 'customer', class: 'msi-newsletter-form-wrap' -%}
@@ -548,7 +717,13 @@
       <div class="msi-container">
         <div class="msi-footer-grid">
           <div class="msi-footer-brand">
-            <div class="msi-footer-brand-name"><span class="msi-accent">MSI</span> Sport</div>
+            <div class="msi-footer-brand-name">
+              {%- if section.settings.logo_image -%}
+                {{ section.settings.logo_image | image_url: width: 320 | image_tag: class: 'msi-logo-img msi-logo-img--footer', alt: 'MSI Magnesio Natural' }}
+              {%- else -%}
+                <img class="msi-logo-img msi-logo-img--footer" src="{{ 'msi-logo.png' | asset_url }}" alt="MSI Magnesio Natural" width="662" height="377">
+              {%- endif -%}
+            </div>
             <p>
               Magnesio natural de alta calidad para estilos de vida activos.
               Formulado con los mejores ingredientes, pensado para que sigas
@@ -576,12 +751,15 @@
           </div>
         </div>
         <div class="msi-footer-bottom">
-          <span>© {{ 'now' | date: '%Y' }} MSI Sport — magnesionatural.com. Todos los derechos reservados.</span>
+          <span>© {{ 'now' | date: '%Y' }} MSI Sport — magnesionatural.es. Todos los derechos reservados.</span>
           <span>🔒 Pago Seguro · SSL · RGPD</span>
         </div>
       </div>
     </footer>
   {%- endif -%}
+
+  {%- comment -%} Pop-up de carrito: intercepta los botones Comprar (AJAX) para seguir comprando sin salir de la página. {%- endcomment -%}
+  {% render 'msi-cart-drawer' %}
 </div>
 
 {% schema %}
@@ -590,6 +768,31 @@
   "tag": "div",
   "class": "msi-landing-wrapper",
   "settings": [
+    {
+      "type": "header",
+      "content": "Modo de color"
+    },
+    {
+      "type": "select",
+      "id": "color_mode",
+      "label": "Fondo de la sección",
+      "options": [
+        { "value": "dark", "label": "Oscuro (negro, actual)" },
+        { "value": "light", "label": "Claro (blanco) — piloto verde" }
+      ],
+      "default": "dark",
+      "info": "Modo claro solo tiene animación hero propia para la cápsula verde. El resto de fotos siguen en fondo oscuro."
+    },
+    {
+      "type": "header",
+      "content": "Logo"
+    },
+    {
+      "type": "image_picker",
+      "id": "logo_image",
+      "label": "Logo de marca",
+      "info": "Si se deja vacío se usa el logo del tema (assets/msi-logo.png) en nav, pantalla de carga y footer."
+    },
     {
       "type": "header",
       "content": "Colores de acento"
@@ -613,6 +816,75 @@
       "default": "#c9a84c"
     },
     {
+      "type": "color",
+      "id": "accent_teal",
+      "label": "Turquesa (marca, tema claro)",
+      "default": "#00c4cf",
+      "info": "Acento principal del modo claro. Para texto pequeño se usa una variante oscura fija."
+    },
+    {
+      "type": "header",
+      "content": "Para quién (audiencias)"
+    },
+    {
+      "type": "text",
+      "id": "aud_1_title",
+      "label": "Bloque 1 — título",
+      "default": "Bienestar 50+"
+    },
+    {
+      "type": "textarea",
+      "id": "aud_1_desc",
+      "label": "Bloque 1 — descripción",
+      "default": "A partir de los 50, huesos y energía piden refuerzo. El magnesio contribuye al mantenimiento de los huesos y a reducir el cansancio y la fatiga."
+    },
+    {
+      "type": "image_picker",
+      "id": "aud_1_image",
+      "label": "Bloque 1 — imagen"
+    },
+    {
+      "type": "text",
+      "id": "aud_2_title",
+      "label": "Bloque 2 — título",
+      "default": "Deportistas"
+    },
+    {
+      "type": "textarea",
+      "id": "aud_2_desc",
+      "label": "Bloque 2 — descripción",
+      "default": "Entrena, rinde, recupera. El magnesio contribuye a la función muscular normal, al equilibrio electrolítico y al metabolismo energético normal."
+    },
+    {
+      "type": "image_picker",
+      "id": "aud_2_image",
+      "label": "Bloque 2 — imagen"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_audience_3",
+      "label": "Mostrar bloque 3 (pendiente de aprobación)",
+      "default": false,
+      "info": "Copy conservador sin claims de enfermedad (Reglamento UE 432/2012). Actívalo cuando dirección confirme el enfoque del tercer público."
+    },
+    {
+      "type": "text",
+      "id": "aud_3_title",
+      "label": "Bloque 3 — título",
+      "default": "Equilibrio mineral"
+    },
+    {
+      "type": "textarea",
+      "id": "aud_3_desc",
+      "label": "Bloque 3 — descripción",
+      "default": "El magnesio contribuye al equilibrio electrolítico y a la función psicológica normal. Si tienes una condición renal, consulta a tu médico antes de tomar cualquier suplemento."
+    },
+    {
+      "type": "image_picker",
+      "id": "aud_3_image",
+      "label": "Bloque 3 — imagen"
+    },
+    {
       "type": "header",
       "content": "Hero — frames de animación"
     },
@@ -630,10 +902,17 @@
       "info": "Los archivos deben llamarse [prefijo]0001.webp … [prefijo]0121.webp"
     },
     {
+      "type": "checkbox",
+      "id": "enable_mobile_scrollytelling",
+      "label": "Animación de scroll en móvil",
+      "default": true,
+      "info": "Si un móvil va lento, desactívalo: vuelve a la imagen estática sin tocar código."
+    },
+    {
       "type": "image_picker",
       "id": "mobile_image",
       "label": "Imagen estática para móvil",
-      "info": "En pantallas <768px el canvas se desactiva y se muestra esta imagen."
+      "info": "Se muestra en móvil si la animación está desactivada (o con 'reducir movimiento' activo)."
     },
     {
       "type": "header",
@@ -844,6 +1123,35 @@
       "label": "Marcar como agotado",
       "default": true,
       "info": "Actívalo mientras el producto esté agotado o a 0,00€ en Shopify."
+    },
+    {
+      "type": "header",
+      "content": "Vídeo promocional (entre Productos y Packs)"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_promo_video",
+      "label": "Mostrar vídeo promocional",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "promo_video_asset",
+      "label": "Archivo de vídeo",
+      "default": "msi-anuncio.mp4",
+      "info": "Nombre del archivo .mp4 subido a la carpeta assets/ del tema. Vacío = msi-anuncio.mp4."
+    },
+    {
+      "type": "text",
+      "id": "promo_video_eyebrow",
+      "label": "Etiqueta sobre el vídeo",
+      "info": "Vacío = sin overlay (el anuncio ya lleva texto integrado)."
+    },
+    {
+      "type": "text",
+      "id": "promo_video_title",
+      "label": "Título sobre el vídeo",
+      "info": "Vacío = sin overlay."
     },
     {
       "type": "header",

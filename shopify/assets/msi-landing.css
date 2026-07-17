@@ -75,6 +75,21 @@
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.35);
 }
+/* Logo de imagen (nav / loader / footer). align-self evita que el
+   flex column del nav lo estire al ancho del subtítulo. */
+.msi-logo-img {
+  display: block;
+  height: 42px;
+  width: auto;
+  align-self: flex-start;
+  object-fit: contain;
+}
+.msi-logo-img--loader {
+  height: 84px;
+}
+.msi-logo-img--footer {
+  height: 48px;
+}
 .msi-nav-menu {
   display: none;
   align-items: center;
@@ -250,6 +265,7 @@
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100svh; /* estable ante el colapso de la barra del navegador móvil */
   overflow: hidden;
 }
 .msi-hero-canvas {
@@ -466,45 +482,57 @@
   }
 }
 
-/* ---------- Fallback móvil del hero (sin canvas) ---------- */
+/* ---------- Hero en móvil ----------
+   Dos modos, gobernados por la clase .is-scrolly que pone el JS:
+   - CON .is-scrolly (móvil normal): scrollytelling real. El canvas
+     dibuja el bote anclado abajo y los beats viven en la franja
+     superior con su propio scrim — texto y producto nunca se pisan.
+   - SIN .is-scrolly (reduced-motion, kill-switch del editor o JS
+     caído): fallback estático mejorado — imagen en el 58% superior,
+     texto abajo sobre scrim sólido. */
 .msi-hero-mobile {
   display: none;
 }
-@media (max-width: 767px), (prefers-reduced-motion: reduce) {
-  .msi-hero {
+@media (max-width: 1023px), (prefers-reduced-motion: reduce) {
+  .msi-landing:not(.is-scrolly) .msi-hero {
     height: auto;
   }
-  .msi-hero-sticky {
+  .msi-landing:not(.is-scrolly) .msi-hero-sticky {
     position: relative;
     height: 100vh;
+    height: 100svh;
     min-height: 560px;
   }
-  .msi-hero-canvas,
-  .msi-beat,
-  .msi-hero-hint,
-  .msi-loader {
-    display: none !important;
+  .msi-landing:not(.is-scrolly) .msi-hero-canvas,
+  .msi-landing:not(.is-scrolly) .msi-beat,
+  .msi-landing:not(.is-scrolly) .msi-hero-hint,
+  .msi-landing:not(.is-scrolly) .msi-loader {
+    display: none;
   }
-  .msi-hero-mobile {
+  .msi-landing:not(.is-scrolly) .msi-hero-mobile {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-end;
     position: absolute;
     inset: 0;
-    padding: 5rem 2rem 4rem;
+    padding: 0 1.5rem calc(3rem + env(safe-area-inset-bottom, 0px));
     z-index: 2;
     background: linear-gradient(
       to top,
-      rgba(5, 5, 5, 0.9) 0%,
-      rgba(5, 5, 5, 0.2) 55%,
-      rgba(5, 5, 5, 0.6) 100%
+      rgba(5, 5, 5, 0.96) 0%,
+      rgba(5, 5, 5, 0.92) 48%,
+      rgba(5, 5, 5, 0.35) 62%,
+      rgba(5, 5, 5, 0.55) 100%
     );
+  }
+  .msi-landing.is-scrolly .msi-hero-mobile {
+    display: none;
   }
 }
 .msi-hero-mobile-img {
   position: absolute;
-  inset: 0;
+  inset: 0 0 42% 0; /* la imagen vive en el 58% superior; el texto, abajo */
   z-index: -1;
   overflow: hidden;
 }
@@ -513,13 +541,14 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 3rem 1.5rem;
+  object-position: center 35%;
+  padding: 4.5rem 1.5rem 0;
 }
 .msi-hero-mobile .msi-beat-tag {
   margin-bottom: 1rem;
 }
 .msi-hero-mobile .msi-beat-title {
-  font-size: 3.5rem;
+  font-size: clamp(2.5rem, 12vw, 3.5rem);
 }
 .msi-hero-mobile-price {
   font-size: 2rem;
@@ -527,10 +556,117 @@
   margin-top: 1rem;
   color: rgba(255, 255, 255, 0.92);
 }
+/* CTA sólido: el botón fantasma era invisible sobre la foto */
+.msi-hero-mobile .msi-beat-cta {
+  background: var(--msi-hero-accent);
+  color: #04150a;
+  border: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+/* Variante clara del fallback (antes no existía: scrim y textos fijos
+   en oscuro aunque la página estuviera en claro). El :not() iguala la
+   especificidad de la regla base de la media query. */
+.msi-landing--light:not(.is-scrolly) .msi-hero-mobile {
+  background: linear-gradient(
+    to top,
+    rgba(250, 251, 252, 0.97) 0%,
+    rgba(250, 251, 252, 0.93) 48%,
+    rgba(250, 251, 252, 0.4) 62%,
+    rgba(250, 251, 252, 0.6) 100%
+  );
+}
+.msi-landing--light .msi-hero-mobile .msi-beat-title {
+  color: #16181d;
+}
+.msi-landing--light .msi-hero-mobile .msi-beat-sub {
+  color: #5b6272;
+}
+.msi-landing--light .msi-hero-mobile .msi-beat-tag {
+  color: #3a7d10;
+}
+.msi-landing--light .msi-hero-mobile-price {
+  color: #16181d;
+}
+.msi-landing--light .msi-hero-mobile .msi-beat-cta {
+  color: #04150a;
+  box-shadow: 0 8px 24px rgba(22, 24, 29, 0.2);
+}
+
+/* ---------- Scrollytelling móvil/tablet (.is-scrolly) ---------- */
+@media (max-width: 1023px) {
+  .msi-landing.is-scrolly .msi-hero {
+    height: 400vh; /* menos scroll-fatiga que los 500vh de escritorio */
+  }
+  /* Scrim de la franja de texto: el canvas ancla el bote abajo, así
+     que el 46% superior es zona de lectura garantizada */
+  .msi-landing.is-scrolly .msi-hero-sticky::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 46%;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      rgba(5, 5, 5, 0.94) 0%,
+      rgba(5, 5, 5, 0.8) 45%,
+      rgba(5, 5, 5, 0) 100%
+    );
+  }
+  .msi-landing--light.is-scrolly .msi-hero-sticky::before {
+    background: linear-gradient(
+      to bottom,
+      rgba(250, 251, 252, 0.95) 0%,
+      rgba(250, 251, 252, 0.82) 45%,
+      rgba(250, 251, 252, 0) 100%
+    );
+  }
+  /* Todos los beats a la franja superior, alineados a la izquierda */
+  .msi-landing.is-scrolly .msi-beat {
+    justify-content: flex-start;
+    align-items: flex-start;
+    text-align: left;
+    padding: calc(4.5rem + env(safe-area-inset-top, 0px)) 1.25rem 0;
+  }
+  .msi-landing.is-scrolly .msi-beat--right,
+  .msi-landing.is-scrolly .msi-beat--center {
+    align-items: flex-start;
+    text-align: left;
+  }
+  .msi-landing.is-scrolly .msi-beat-title {
+    font-size: clamp(2.2rem, 10.5vw, 3.2rem);
+    max-width: none;
+  }
+  .msi-landing.is-scrolly .msi-beat-sub {
+    font-size: clamp(0.95rem, 4vw, 1.1rem);
+    max-width: 24rem;
+    margin-top: 1rem;
+  }
+  /* Beat D (precio + CTA): el único momento tipográfico XXL */
+  .msi-landing.is-scrolly .msi-beat--d .msi-beat-title {
+    font-size: clamp(2.8rem, 13vw, 4rem);
+  }
+  .msi-landing.is-scrolly .msi-beat .msi-beat-cta,
+  .msi-landing--light.is-scrolly .msi-beat .msi-beat-cta {
+    margin-top: 1.5rem;
+    background: var(--msi-hero-accent);
+    color: #04150a;
+    border: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .msi-landing.is-scrolly .msi-hero-hint {
+    bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 
 /* ---------- Secciones genéricas ---------- */
 .msi-section {
-  padding: 7rem 2rem;
+  padding: clamp(4.5rem, 10vw, 7rem) clamp(1.25rem, 5vw, 4rem);
 }
 .msi-container {
   max-width: 72rem;
@@ -553,7 +689,7 @@
   color: var(--msi-orange);
 }
 .msi-h2 {
-  font-size: 2.25rem;
+  font-size: clamp(2rem, 1.2rem + 3.5vw, 3rem);
   font-weight: 900;
   letter-spacing: -0.05em;
   color: rgba(255, 255, 255, 0.9);
@@ -564,14 +700,6 @@
   max-width: 32rem;
   margin: 0 auto;
   line-height: 1.625;
-}
-@media (min-width: 768px) {
-  .msi-section {
-    padding: 7rem 4rem;
-  }
-  .msi-h2 {
-    font-size: 3rem;
-  }
 }
 
 /* ---------- Productos ---------- */
@@ -623,8 +751,24 @@
   padding: 2rem;
   transition: transform 0.5s;
 }
+.msi-product-media img {
+  filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.55));
+}
+.msi-product-media {
+  transition: box-shadow 0.5s;
+}
 .msi-product-card:hover .msi-product-media img {
   transform: scale(1.05);
+}
+/* Glow tintado por producto al hacer hover (acentos configurables) */
+.msi-product-card:hover .msi-product-media--1 {
+  box-shadow: inset 0 -70px 90px -60px color-mix(in srgb, var(--msi-orange) 45%, transparent);
+}
+.msi-product-card:hover .msi-product-media--2 {
+  box-shadow: inset 0 -70px 90px -60px color-mix(in srgb, var(--msi-green) 45%, transparent);
+}
+.msi-product-card:hover .msi-product-media--3 {
+  box-shadow: inset 0 -70px 90px -60px color-mix(in srgb, var(--msi-gold) 45%, transparent);
 }
 .msi-product-tag {
   position: absolute;
@@ -720,6 +864,257 @@
 .msi-buy-btn.is-soldout:hover {
   transform: none;
   opacity: 1;
+}
+
+/* ---------- Vídeo promocional ----------
+   El vídeo va dentro de un marco redondeado (.msi-promo-frame) con
+   aire antes y después, para que no quede encajado a sangre entre
+   secciones. La sección sigue al tema; el marco cambia de borde. */
+.msi-promo {
+  position: relative;
+  padding: 3rem 1.25rem;
+  background: #000;
+}
+@media (min-width: 768px) {
+  .msi-promo {
+    padding: 5rem 2rem;
+  }
+}
+.msi-promo-frame {
+  position: relative;
+  overflow: hidden;
+  max-width: 72rem;
+  margin: 0 auto;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+}
+.msi-promo-video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 94vh; /* 82vh + 15% */
+  object-fit: cover;
+  background: #000;
+}
+/* Mismo grano fractalNoise que el hero: el vídeo pertenece al mismo mundo material */
+.msi-promo-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.06;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E");
+}
+.msi-promo-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 2.5rem 2rem;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.72) 100%);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.msi-promo.is-visible .msi-promo-overlay {
+  opacity: 1;
+  transform: translateY(0);
+}
+.msi-promo-eyebrow {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+.msi-promo-title {
+  font-size: 1.75rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: rgba(255, 255, 255, 0.92);
+  max-width: 24ch;
+}
+@media (min-width: 768px) {
+  .msi-promo-overlay {
+    padding: 3.5rem 4rem;
+  }
+  .msi-promo-title {
+    font-size: 2.5rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .msi-promo-overlay {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ---------- Para quién (bloques de audiencia) ---------- */
+.msi-audiences-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+@media (min-width: 900px) {
+  .msi-audiences-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+.msi-audience-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.msi-audience-card:hover {
+  transform: translateY(-6px);
+}
+.msi-audience-media {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+.msi-audience-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.msi-audience-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  flex: 1;
+}
+.msi-audience-title {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: rgba(255, 255, 255, 0.92);
+}
+.msi-audience-desc {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.5);
+}
+.msi-audience-bubbles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding: 0;
+  list-style: none;
+}
+.msi-audience-bubbles li {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.75);
+}
+.msi-audiences-note {
+  margin-top: 2.5rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  max-width: 44rem;
+  margin-left: auto;
+  margin-right: auto;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ---------- Fondo "aurora" de marca ----------
+   Blobs radiales desenfocados (teal + verde) que derivan muy despacio.
+   Uso selectivo como fondo vivo pero discreto; solo en tema claro.
+   El contenido de la sección debe ir en un hijo con z-index mayor. */
+.msi-aurora {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.msi-landing--light .msi-aurora {
+  display: block;
+}
+.msi-aurora::before,
+.msi-aurora::after {
+  content: '';
+  position: absolute;
+  width: 55vw;
+  height: 55vw;
+  min-width: 480px;
+  min-height: 480px;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.16;
+  will-change: transform;
+}
+.msi-aurora::before {
+  top: -20%;
+  left: -12%;
+  background: radial-gradient(circle at 30% 30%, var(--msi-teal), transparent 65%);
+  animation: msi-aurora-a 16s ease-in-out infinite alternate;
+}
+.msi-aurora::after {
+  bottom: -25%;
+  right: -15%;
+  background: radial-gradient(circle at 70% 70%, #72d52c, transparent 65%);
+  animation: msi-aurora-b 22s ease-in-out infinite alternate;
+}
+@keyframes msi-aurora-a {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(14vw, 6vh, 0) scale(1.25); }
+  to { transform: translate3d(6vw, 12vh, 0) scale(1.05); }
+}
+@keyframes msi-aurora-b {
+  from { transform: translate3d(0, 0, 0) scale(1.15); }
+  50% { transform: translate3d(-12vw, -8vh, 0) scale(0.9); }
+  to { transform: translate3d(-4vw, -14vh, 0) scale(1.2); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .msi-aurora::before,
+  .msi-aurora::after {
+    animation: none;
+  }
+}
+/* Variante hero: un pelín más intensa y con ciclo más corto */
+.msi-aurora--hero::before,
+.msi-aurora--hero::after {
+  opacity: 0.28;
+}
+.msi-aurora--hero::before {
+  animation-duration: 14s;
+}
+.msi-aurora--hero::after {
+  animation-duration: 19s;
+}
+/* Secciones que llevan aurora: ancla de posicionamiento + contenido encima */
+.msi-products,
+.msi-packs,
+.msi-audiences {
+  position: relative;
+}
+.msi-products > .msi-container,
+.msi-packs > .msi-container,
+.msi-audiences > .msi-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- Accesibilidad ---------- */
+.msi-landing section[id] {
+  scroll-margin-top: 76px;
+}
+.msi-landing a:focus-visible,
+.msi-landing button:focus-visible {
+  outline: 2px solid var(--msi-orange);
+  outline-offset: 2px;
 }
 
 /* ---------- Packs ---------- */
@@ -938,6 +1333,40 @@
   height: 7rem;
   z-index: 1;
 }
+/* Móvil: los floats dejan de volar (tapaban a la persona) → tira de 2 bajo la principal */
+@media (max-width: 767px) {
+  .msi-benefits-visual {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  .msi-benefits-main {
+    grid-column: 1 / -1;
+    height: clamp(260px, 60vw, 400px);
+  }
+  .msi-benefits-float,
+  .msi-benefits-float--br,
+  .msi-benefits-float--tl {
+    position: static;
+    width: auto;
+    height: 7.5rem;
+  }
+}
+/* Tablet: vuelo reducido para no tapar el sujeto de la foto principal */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .msi-benefits-float--br {
+    right: -0.75rem;
+    bottom: -0.75rem;
+    width: 9rem;
+    height: 7.5rem;
+  }
+  .msi-benefits-float--tl {
+    left: -0.75rem;
+    top: -0.75rem;
+    width: 7.5rem;
+    height: 6rem;
+  }
+}
 .msi-benefits-copy .msi-h2 {
   font-size: 1.875rem;
   line-height: 1.25;
@@ -1019,7 +1448,7 @@
 @media (min-width: 768px) {
   .msi-lifestyle-item--large {
     grid-column: span 1;
-    grid-row: span 2;
+    aspect-ratio: 4 / 3;
   }
 }
 .msi-lifestyle-item img,
@@ -1034,6 +1463,20 @@
 }
 .msi-lifestyle-item:hover img {
   transform: scale(1.05);
+}
+/* Fotos retrato recortadas en caja apaisada: ancla el encuadre a las caras */
+img.msi-img-pos-top {
+  object-position: center 18%;
+}
+.msi-lifestyle-banner {
+  margin-top: 1rem;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+.msi-lifestyle-banner img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 .msi-lifestyle-overlay {
   position: absolute;
@@ -1066,16 +1509,11 @@
   }
 }
 .msi-newsletter h2 {
-  font-size: 1.875rem;
+  font-size: clamp(1.75rem, 1.2rem + 2.5vw, 2.25rem);
   font-weight: 900;
   letter-spacing: -0.05em;
   color: #fff;
   margin-bottom: 0.75rem;
-}
-@media (min-width: 768px) {
-  .msi-newsletter h2 {
-    font-size: 2.25rem;
-  }
 }
 .msi-newsletter p {
   color: rgba(255, 255, 255, 0.75);
@@ -1116,6 +1554,21 @@
 .msi-newsletter-form button:hover {
   transform: translateY(-1px);
   opacity: 0.9;
+}
+/* iOS hace auto-zoom al enfocar inputs <16px */
+@media (max-width: 767px) {
+  .msi-newsletter-form input[type="email"] {
+    font-size: 1rem;
+  }
+}
+@media (max-width: 479px) {
+  .msi-newsletter-form {
+    flex-direction: column;
+  }
+  .msi-newsletter-form button {
+    width: 100%;
+    padding: 1rem 1.5rem;
+  }
 }
 .msi-newsletter-msg {
   font-size: 1rem;
@@ -1216,4 +1669,327 @@
   height: 100%;
   background: #1a1a1a;
   fill: #2e2e2e;
+}
+
+/* ============================================================
+   MODO CLARO (--light--) — piloto cápsula verde.
+   Capa aditiva: no toca ninguna regla de arriba, solo sobreescribe
+   por especificidad (.msi-landing--light + selector original).
+   El hero (.msi-beat, dentro de .msi-beat) se recolorea aparte del
+   fallback móvil (.msi-hero-mobile), que reutiliza las mismas clases
+   .msi-beat-tag/title/sub/cta pero sigue sobre el scrim oscuro fijo
+   (no tiene variante clara todavía) — por eso todos los overrides de
+   texto del hero van con el prefijo ".msi-beat " para no tocarlo.
+   El scrim de lifestyle y las cajas de foto de producto quedan
+   fuera a propósito (fotos compuestas sobre negro). El vídeo promo
+   y el newsletter SÍ se re-tematizan más abajo (marco claro / teal).
+   ============================================================ */
+.msi-landing--light {
+  background: #fafbfc;
+  color: #16181d;
+}
+
+/* Nav */
+.msi-landing--light .msi-nav {
+  background: rgba(250, 251, 252, 0.85);
+  border-bottom: 1px solid #e7ebf0;
+}
+.msi-landing--light .msi-nav-logo-title { color: #16181d; }
+.msi-landing--light .msi-nav-logo-sub { color: #5b6272; }
+.msi-landing--light .msi-nav-menu a { color: #5b6272; }
+.msi-landing--light .msi-nav-menu a:hover { color: #16181d; }
+.msi-landing--light .msi-nav-cta {
+  color: #16181d;
+  background: rgba(22, 24, 29, 0.05);
+  border: 1px solid rgba(22, 24, 29, 0.15);
+  box-shadow: inset 0 0 8px 0 rgba(22, 24, 29, 0.08), 0 8px 32px 0 rgba(0, 0, 0, 0.12);
+}
+.msi-landing--light .msi-nav-cta::before {
+  background: linear-gradient(to right, transparent, rgba(22, 24, 29, 0.08), transparent);
+}
+
+/* Loader */
+.msi-landing--light .msi-loader { background: #fafbfc; }
+.msi-landing--light .msi-loader-logo-sub { color: #5b6272; }
+.msi-landing--light .msi-loader-bar { background: #e7ebf0; }
+.msi-landing--light .msi-loader-label { color: #5b6272; }
+.msi-landing--light .msi-loader-dots span { background: #5b6272; }
+
+/* Hero (canvas + beats de escritorio, no toca el fallback móvil) */
+.msi-landing--light .msi-hero-canvas { background: #fafbfc; }
+.msi-landing--light .msi-hero-vignette {
+  background: radial-gradient(
+    ellipse 80% 80% at 50% 50%,
+    transparent 55%,
+    rgba(250, 251, 252, 0.25) 75%,
+    rgba(250, 251, 252, 0.55) 100%
+  );
+}
+.msi-landing--light .msi-beat .msi-beat-title { color: #16181d; }
+.msi-landing--light .msi-beat .msi-beat-sub { color: #5b6272; }
+/* Verde como texto suelto → variante oscura apta para texto (~5:1).
+   Debe ir ANTES del override de --d, que gana por orden de fichero. */
+.msi-landing--light .msi-beat .msi-beat-tag { color: #3a7d10; }
+.msi-landing--light .msi-beat--d .msi-beat-tag {
+  color: rgba(22, 24, 29, 0.85);
+  text-shadow: none;
+}
+.msi-landing--light .msi-beat--d .msi-beat-title { text-shadow: none; }
+.msi-landing--light .msi-beat--d .msi-beat-sub {
+  color: rgba(22, 24, 29, 0.8);
+  text-shadow: none;
+}
+.msi-landing--light .msi-beat .msi-beat-cta {
+  color: #16181d;
+  border: 1px solid rgba(22, 24, 29, 0.2);
+  box-shadow: 0 0 0 1px rgba(22, 24, 29, 0.15), 0 4px 24px rgba(0, 0, 0, 0.12);
+  background-color: rgba(22, 24, 29, 0.05);
+}
+.msi-landing--light .msi-beat .msi-beat-cta:hover {
+  border-color: rgba(22, 24, 29, 0.4);
+  background-color: rgba(22, 24, 29, 0.08);
+}
+.msi-landing--light .msi-hero-hint-label { color: #5b6272; }
+.msi-landing--light .msi-hero-hint-line { background: #e7ebf0; }
+
+/* Cabeceras de sección (antes sin override: quedaban blancas sobre blanco) */
+.msi-landing--light .msi-h2 { color: #16181d; }
+.msi-landing--light .msi-section-sub { color: #5b6272; }
+
+/* Productos (los recuadros --1/--2/--3 siguen oscuros a propósito:
+   sus fotos aún están compuestas sobre negro) */
+.msi-landing--light .msi-products { background: #fafbfc; }
+.msi-landing--light .msi-product-card {
+  background: #f7f7f7;
+  border: 1px solid #e7ebf0;
+}
+.msi-landing--light .msi-product-line { color: #5b6272; }
+.msi-landing--light .msi-product-name { color: #16181d; }
+.msi-landing--light .msi-product-desc { color: #5b6272; }
+.msi-landing--light .msi-product-price { color: #16181d; }
+.msi-landing--light .msi-product-price small { color: #5b6272; }
+.msi-landing--light .msi-buy-btn.is-soldout {
+  background: rgba(22, 24, 29, 0.08);
+  color: rgba(22, 24, 29, 0.5);
+  border: 1px solid rgba(22, 24, 29, 0.15);
+}
+/* CTA verde: texto oscuro sobre verde (blanco daba ~1.9:1; oscuro ~9.5:1) */
+.msi-landing--light .msi-buy-btn--2 {
+  background: #72d52c;
+  color: #16181d;
+}
+.msi-landing--light .msi-buy-btn--2:hover { background: #56bf18; }
+/* Badges verdes: texto oscuro en vez de blanco */
+.msi-landing--light .msi-product-tag--2,
+.msi-landing--light .msi-pack-shipping-free {
+  background: #72d52c;
+  color: #16181d;
+}
+
+/* Packs (la tarjeta --featured se invierte a sólido navy para
+   seguir destacando entre hermanas ahora blancas) */
+.msi-landing--light .msi-packs {
+  background: linear-gradient(180deg, #fafbfc 0%, #eef1f7 100%);
+}
+.msi-landing--light .msi-pack {
+  background: rgba(22, 24, 29, 0.035);
+  border: 1px solid #e7ebf0;
+}
+.msi-landing--light .msi-pack-qty { color: #16181d; }
+.msi-landing--light .msi-pack-qty span { color: #5b6272; }
+.msi-landing--light .msi-pack-label { color: #5b6272; }
+.msi-landing--light .msi-pack-price { color: #16181d; }
+.msi-landing--light .msi-pack-perunit { color: #5b6272; }
+.msi-landing--light .msi-pack-shipping { color: #5b6272; }
+.msi-landing--light .msi-pack-savings { color: #3a7d10; }
+.msi-landing--light .msi-pack-btn {
+  color: #16181d;
+  border: 1px solid rgba(22, 24, 29, 0.18);
+}
+.msi-landing--light .msi-pack-btn:hover { border-color: rgba(22, 24, 29, 0.4); }
+.msi-landing--light .msi-pack-btn.is-pending:hover { border-color: rgba(22, 24, 29, 0.18); }
+.msi-landing--light .msi-pack--featured {
+  background: var(--msi-navy);
+}
+.msi-landing--light .msi-pack--featured .msi-pack-qty,
+.msi-landing--light .msi-pack--featured .msi-pack-price { color: #ffffff; }
+.msi-landing--light .msi-pack--featured .msi-pack-qty span { color: rgba(255, 255, 255, 0.55); }
+.msi-landing--light .msi-pack--featured .msi-pack-label { color: rgba(255, 255, 255, 0.6); }
+.msi-landing--light .msi-pack--featured .msi-pack-perunit { color: rgba(255, 255, 255, 0.55); }
+.msi-landing--light .msi-pack--featured .msi-pack-shipping { color: rgba(255, 255, 255, 0.7); }
+
+/* Beneficios (las fotos main/float siguen con su propio fondo oscuro) */
+.msi-landing--light .msi-benefits { background: #fafbfc; }
+.msi-landing--light .msi-benefits-float { border: 2px solid #e7ebf0; }
+.msi-landing--light .msi-benefits-copy > p { color: #5b6272; }
+.msi-landing--light .msi-benefit:hover { background: rgba(22, 24, 29, 0.035); }
+.msi-landing--light .msi-benefit-title { color: #16181d; }
+.msi-landing--light .msi-benefit-desc { color: #5b6272; }
+
+/* Lifestyle (el scrim sobre las fotos se deja igual, son fotos que
+   siguen compuestas sobre negro) */
+.msi-landing--light .msi-lifestyle { background: #fafbfc; }
+
+/* Footer */
+.msi-landing--light .msi-footer {
+  background: #fafbfc;
+  border-top: 1px solid #e7ebf0;
+}
+.msi-landing--light .msi-footer-brand-name { color: #16181d; }
+.msi-landing--light .msi-footer-brand p { color: #5b6272; }
+.msi-landing--light .msi-footer h4 { color: rgba(22, 24, 29, 0.7); }
+.msi-landing--light .msi-footer ul a { color: #5b6272; }
+.msi-landing--light .msi-footer ul a:hover { color: rgba(22, 24, 29, 0.8); }
+.msi-landing--light .msi-footer-bottom { border-top: 1px solid #e7ebf0; }
+.msi-landing--light .msi-footer-bottom span { color: #5b6272; }
+
+/* Placeholder de imagen sin asignar */
+.msi-landing--light .msi-img-placeholder { background: #e9e9e9; fill: #c7c7c7; }
+
+/* Acento turquesa de marca (solo tema claro): --msi-teal vivo para
+   rellenos y elementos grandes; --msi-teal-ink para texto pequeño
+   (~4.8:1 sobre #fafbfc). El eyebrow del vídeo promo queda fuera:
+   vive sobre el vídeo oscuro. */
+.msi-landing--light .msi-section-head .msi-eyebrow,
+.msi-landing--light .msi-benefits-copy .msi-eyebrow {
+  color: var(--msi-teal-ink);
+}
+.msi-landing--light .msi-pack-badge {
+  background: var(--msi-teal);
+  color: #16181d;
+  box-shadow: 0 4px 16px rgba(0, 196, 207, 0.35);
+}
+.msi-landing--light .msi-newsletter {
+  background: linear-gradient(135deg, #00b3bd 0%, var(--msi-teal-ink) 100%);
+}
+.msi-landing--light .msi-promo { background: #fafbfc; }
+.msi-landing--light .msi-promo-frame {
+  border-color: #e7ebf0;
+  box-shadow: 0 24px 64px rgba(22, 24, 29, 0.16);
+}
+
+/* Productos en claro: las cajas de foto dejan de ser bloques negros
+   planos — glow de acento permanente desde abajo (las fotos ya son
+   PNG/webp recortados con alpha, incluida la del spray). */
+.msi-landing--light .msi-product-media--1 {
+  background: radial-gradient(130% 100% at 50% 100%, color-mix(in srgb, var(--msi-orange) 24%, #0d0804) 0%, #0d0804 60%);
+}
+.msi-landing--light .msi-product-media--2 {
+  background: radial-gradient(130% 100% at 50% 100%, color-mix(in srgb, var(--msi-teal) 26%, #060d04) 0%, #060d04 60%);
+}
+.msi-landing--light .msi-product-media--3 {
+  background: radial-gradient(130% 100% at 50% 100%, color-mix(in srgb, var(--msi-gold) 24%, #0a0a08) 0%, #0a0a08 60%);
+}
+
+/* Para quién (audiencias) en claro: tarjetas blancas elevadas sobre
+   #fafbfc y burbujas teal */
+.msi-landing--light .msi-audiences { background: #fafbfc; }
+.msi-landing--light .msi-audience-card {
+  background: #ffffff;
+  border-color: #e7ebf0;
+  box-shadow: 0 8px 32px rgba(22, 24, 29, 0.06);
+}
+.msi-landing--light .msi-audience-card:hover {
+  box-shadow: 0 16px 48px rgba(22, 24, 29, 0.1);
+}
+.msi-landing--light .msi-audience-title { color: #16181d; }
+.msi-landing--light .msi-audience-desc { color: #5b6272; }
+.msi-landing--light .msi-audience-bubbles li {
+  background: rgba(0, 196, 207, 0.1);
+  border-color: rgba(0, 124, 133, 0.25);
+  color: var(--msi-teal-ink);
+}
+.msi-landing--light .msi-audiences-note { color: #5b6272; }
+
+/* ---------- Interruptor claro/oscuro (estilo iOS) ----------
+   Estado oscuro: pastilla negra, botón a la IZQUIERDA con luna blanca.
+   Estado claro:  pastilla blanca, botón a la DERECHA con sol negro.
+   La posición/color los gobierna la clase .msi-landing--light, así el
+   botón nunca se desincroniza del modo real de la página. */
+.msi-mode-toggle {
+  position: fixed;
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  right: calc(1.5rem + env(safe-area-inset-right, 0px));
+  z-index: 45;
+  width: 64px;
+  height: 36px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: #131313;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6), 0 4px 16px rgba(0, 0, 0, 0.45);
+  padding: 0;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.msi-mode-toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #262626;
+  color: #ffffff; /* luna blanca sobre botón oscuro */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease, color 0.3s ease;
+}
+.msi-mode-icon { display: block; }
+.msi-mode-icon--sun { display: none; }
+.msi-mode-toggle:hover .msi-mode-toggle-knob { transform: scale(1.06); }
+
+.msi-landing--light .msi-mode-toggle {
+  background: #f1f1f1;
+  border-color: #e7ebf0;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+.msi-landing--light .msi-mode-toggle-knob {
+  transform: translateX(28px);
+  background: #ffffff;
+  color: #16181d; /* sol negro sobre botón blanco */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+.msi-landing--light .msi-mode-toggle:hover .msi-mode-toggle-knob {
+  transform: translateX(28px) scale(1.06);
+}
+.msi-landing--light .msi-mode-icon--sun { display: block; }
+.msi-landing--light .msi-mode-icon--moon { display: none; }
+@media (max-width: 767px) {
+  .msi-mode-toggle {
+    width: 56px;
+    height: 32px;
+    bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  }
+  .msi-mode-toggle-knob {
+    width: 26px;
+    height: 26px;
+  }
+  .msi-landing--light .msi-mode-toggle-knob {
+    transform: translateX(24px);
+  }
+  .msi-landing--light .msi-mode-toggle:hover .msi-mode-toggle-knob {
+    transform: translateX(24px) scale(1.06);
+  }
+}
+
+/* ---------- Reveals al hacer scroll ----------
+   Gateados por .msi-reveal-ready (la añade el JS): sin JS nada queda oculto. */
+.msi-landing.msi-reveal-ready [data-msi-reveal] {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.msi-landing.msi-reveal-ready [data-msi-reveal].is-inview {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .msi-landing [data-msi-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }

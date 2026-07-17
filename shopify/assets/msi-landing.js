@@ -11,8 +11,14 @@
       movimiento — réplica del useSpring de Framer Motion.
    5. Los "beats" de texto (data-msi-beat) aparecen/desaparecen
       con opacidad + translateY según su tramo [start, end].
-   6. En móvil (<768px) o con prefers-reduced-motion no se
-      precarga nada: el CSS muestra una imagen estática.
+   6. En móvil (<768px) el scrollytelling corre con una variante
+      ligera: 61 frames re-escalados (*-frame-m_0001..0061.webp),
+      carga progresiva multi-pasada (primer frame como póster,
+      interactivo con ~10 frames, el resto rellena por detrás) y
+      el bote anclado abajo para no pisar el texto.
+   7. Con prefers-reduced-motion (o el ajuste "Animación de scroll
+      en móvil" desactivado) no se precarga nada: el CSS muestra
+      el fallback estático.
    ============================================================ */
 (function () {
   'use strict';
@@ -51,32 +57,56 @@
       glow: 'rgba(232,98,10,0.8)',
       beats: null
     }
-    // ,{
-    //   id: 'verde',
-    //   prefix: 'verde-frame_',
-    //   base: null,
-    //   zoomFactor: 0.85, stretchX: 1, stretchY: 1,
-    //   accent: '#7bc144', glow: 'rgba(123,193,68,0.8)',
-    //   beats: {
-    //     a: { tag: 'Salud Articular y Ósea', title: 'MAGNESIO<br>COLÁGENO', sub: 'Sinergia total para huesos, piel y articulaciones.' },
-    //     b: { tag: 'Recuperación activa', title: 'Huesos<br>fuertes', sub: 'Colágeno + Magnesio en sinergia para máxima protección articular y ósea.' },
-    //     c: { tag: 'Piel y tejidos', title: 'Piel.<br>Pelo.<br>Uñas.', sub: 'El colágeno que tu cuerpo necesita para mantenerse joven y activo cada día.' },
-    //     d: { tag: 'Empieza hoy', title: '14,90€', sub: 'Envío en 24/48h · 100% Vegano' }
-    //   }
-    // }
-    // ,{
-    //   id: 'spray',
-    //   prefix: 'spray-frame_',
-    //   base: null,
-    //   zoomFactor: 1.5, stretchX: 1, stretchY: 1,
-    //   accent: '#c9a84c', glow: 'rgba(201,168,76,0.8)',
-    //   beats: {
-    //     a: { tag: 'Absorción transdérmica', title: 'ACEITE<br>MAGNESIO', sub: 'Absorción directa a través de la piel. Sin pasar por el sistema digestivo.' },
-    //     b: { tag: 'Acción inmediata', title: 'Directo<br>al músculo', sub: 'Sales de magnesio naturales del Balneario de La Higuera. Pureza certificada.' },
-    //     c: { tag: 'Sin cápsulas', title: 'Solo<br>aplica<br>y listo.', sub: '125 ml para uso diario. Ideal para deportistas y personas con problemas de absorción oral.' },
-    //     d: { tag: 'Empieza hoy', title: '14,90€', sub: 'Envío en 24/48h · Sales 100% Naturales' }
-    //   }
-    // }
+    ,{
+      id: 'verde',
+      prefix: 'verde-frame_',
+      base: null,
+      zoomFactor: 0.85, stretchX: 1, stretchY: 1,
+      accent: '#7bc144', glow: 'rgba(123,193,68,0.8)',
+      // Variante móvil: 61 frames re-escalados a 640px de ancho.
+      // heightFrac = fracción de la altura del viewport que ocupa el
+      // frame; anchorBottom = dónde apoya su base (0-1); maxOverflowX
+      // = desborde lateral máximo permitido antes de capar la escala.
+      mobile: { prefix: 'verde-frame-m_', count: 61, heightFrac: 0.66, anchorBottom: 0.96, maxOverflowX: 1.0 },
+      beats: {
+        a: { tag: 'Salud Articular y Ósea', title: 'MAGNESIO<br>COLÁGENO', sub: 'Sinergia total para huesos, piel y articulaciones.' },
+        b: { tag: 'Recuperación activa', title: 'Huesos<br>fuertes', sub: 'Colágeno + Magnesio en sinergia para máxima protección articular y ósea.' },
+        c: { tag: 'Piel y tejidos', title: 'Piel.<br>Pelo.<br>Uñas.', sub: 'El colágeno que tu cuerpo necesita para mantenerse joven y activo cada día.' },
+        d: { tag: 'Empieza hoy', title: '14,90€', sub: 'Envío en 24/48h · 100% Vegano' }
+      }
+    }
+    ,{
+      id: 'spray',
+      prefix: 'spray-frame_',
+      base: null,
+      zoomFactor: 1.5, stretchX: 1, stretchY: 1,
+      accent: '#c9a84c', glow: 'rgba(201,168,76,0.8)',
+      beats: {
+        a: { tag: 'Absorción transdérmica', title: 'ACEITE<br>MAGNESIO', sub: 'Absorción directa a través de la piel. Sin pasar por el sistema digestivo.' },
+        b: { tag: 'Acción inmediata', title: 'Directo<br>al músculo', sub: 'Sales de magnesio naturales del Balneario de La Higuera. Pureza certificada.' },
+        c: { tag: 'Sin cápsulas', title: 'Solo<br>aplica<br>y listo.', sub: '125 ml para uso diario. Ideal para deportistas y personas con problemas de absorción oral.' },
+        d: { tag: 'Empieza hoy', title: '14,90€', sub: 'Envío en 24/48h · Sales 100% Naturales' }
+      }
+    }
+    ,{
+      // Piloto de modo claro: mismos beats que 'verde', frames sobre
+      // fondo blanco (verde-blanco-frame_0001..0121.webp). Se activa
+      // con data-color-mode="light" en la sección (ver MsiLanding).
+      id: 'verde-blanco',
+      prefix: 'verde-blanco-frame_',
+      base: null,
+      zoomFactor: 1, stretchX: 1, stretchY: 1,
+      accent: '#7bc144', glow: 'rgba(123,193,68,0.8)',
+      // Secuencia clara apaisada (960x720): se ancla por altura y el
+      // sobrante lateral se recorta simétrico al dibujar.
+      mobile: { prefix: 'verde-blanco-frame-m_', count: 61, heightFrac: 0.58, anchorBottom: 0.95, maxOverflowX: 1.45 },
+      beats: {
+        a: { tag: 'Salud Articular y Ósea', title: 'MAGNESIO<br>COLÁGENO', sub: 'Sinergia total para huesos, piel y articulaciones.' },
+        b: { tag: 'Recuperación activa', title: 'Huesos<br>fuertes', sub: 'Colágeno + Magnesio en sinergia para máxima protección articular y ósea.' },
+        c: { tag: 'Piel y tejidos', title: 'Piel.<br>Pelo.<br>Uñas.', sub: 'El colágeno que tu cuerpo necesita para mantenerse joven y activo cada día.' },
+        d: { tag: 'Empieza hoy', title: '14,90€', sub: 'Envío en 24/48h · 100% Vegano' }
+      }
+    }
   ];
 
   /* ---------- Utilidades ---------- */
@@ -89,12 +119,36 @@
     return ('0000' + n).slice(-4);
   }
 
-  // ¿Debemos desactivar el scrollytelling? (móvil o reduced motion)
-  function isStaticMode() {
-    return (
-      window.matchMedia('(max-width: 767px)').matches ||
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    );
+  function prefersReducedMotion() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  // Hasta 1023px inclusive: cubre móviles y tablets en vertical, donde
+  // el bote centrado del layout de escritorio pisaría el texto. Los
+  // frames -m (640px) dan nitidez de sobra a estos tamaños con DPR 1.5.
+  function isMobileViewport() {
+    return window.matchMedia('(max-width: 1023px)').matches;
+  }
+
+  // Orden de carga progresiva: primero y último frame, luego pasadas
+  // con zancada 8 → 4 → 2 → 1. La primera pasada (~n/8 frames) ya
+  // permite animar; las siguientes refinan sin bloquear.
+  function buildLoadOrder(n) {
+    var seen = new Array(n);
+    var out = [];
+    var strides = [8, 4, 2, 1];
+    function push(i) {
+      if (!seen[i]) {
+        seen[i] = true;
+        out.push(i);
+      }
+    }
+    push(0);
+    push(n - 1);
+    for (var s = 0; s < strides.length; s++) {
+      for (var k = 0; k < n; k += strides[s]) push(k);
+    }
+    return out;
   }
 
   /* ---------- Instancia por sección ---------- */
@@ -109,116 +163,316 @@
       root.querySelectorAll('[data-msi-beat]')
     );
 
-    this.frameCount = parseInt(root.getAttribute('data-frame-count'), 10) || 121;
+    this.desktopFrameCount = parseInt(root.getAttribute('data-frame-count'), 10) || 121;
+    this.frameCount = this.desktopFrameCount;
+    // Kill-switch del editor: "Animación de scroll en móvil".
+    this.mobileScrollyEnabled = root.getAttribute('data-mobile-scrolly') !== 'false';
+    this.mobileLayout = false;
     this.framesBase = root.getAttribute('data-frames-base') || '';
     this.framePrefix = root.getAttribute('data-frame-prefix') || 'frame_';
     this.frameExt = root.getAttribute('data-frame-ext') || '.webp';
+    this.framesVLight = root.getAttribute('data-frames-v-light') || '';
+    this.colorMode = root.getAttribute('data-color-mode') || 'dark';
+    // La elección del visitante (interruptor) manda sobre el ajuste
+    // del editor y sobrevive a la recarga.
+    try {
+      var stored = window.localStorage.getItem('msi-color-mode');
+      if (stored === 'light' || stored === 'dark') this.colorMode = stored;
+    } catch (e) { /* localStorage bloqueado (p. ej. navegación privada) */ }
+    this.bgColor = this.colorMode === 'light' ? '#fafbfc' : '#000000';
+    root.classList.toggle('msi-landing--light', this.colorMode === 'light');
+    root.setAttribute('data-color-mode', this.colorMode);
 
     this.frames = [];
+    this.loadedCount = 0;
     this.started = false;
     this.destroyed = false;
     this.current = 0; // posición suavizada (float)
     this.target = 0; //  posición objetivo según scroll (float)
-    this.lastDrawn = -1;
+    this.lastDrawn = -1; //    último índice pedido al canvas
+    this.lastDrawnSrc = -1; // último frame realmente pintado (nearest)
     this.raf = 0;
     this.running = false;
+    this.dpr = 1;
+    this.overlayCanvas = null; // viñetas/bordes pre-renderizados
 
-    // Secuencia activa. Por defecto la primera (naranja).
-    this.seq = SEQUENCES[0];
-    // >>> Índice aleatorio (descomenta para activar): <<<
-    // this.seq = SEQUENCES[Math.floor(Math.random() * SEQUENCES.length)];
+    // Secuencia activa: solo verde (naranja/spray desactivadas). En
+    // modo claro se usa su variante sobre fondo blanco.
+    this.seq = SEQUENCES.filter(function (s) {
+      return s.id === (this.colorMode === 'light' ? 'verde-blanco' : 'verde');
+    }, this)[0];
 
     this.onScroll = this.onScroll.bind(this);
     this.onResize = this.onResize.bind(this);
     this.loop = this.loop.bind(this);
 
+    // Interruptor claro/oscuro (estilo iOS).
+    var self = this;
+    this.swapping = false;
+    this.modeToggle = root.querySelector('[data-msi-mode-toggle]');
+    if (this.modeToggle) {
+      this.modeToggle.setAttribute(
+        'aria-checked',
+        this.colorMode === 'light' ? 'true' : 'false'
+      );
+      this.modeToggle.addEventListener('click', function () {
+        self.setColorMode(self.colorMode === 'light' ? 'dark' : 'light');
+      });
+    }
+
+    // El vídeo promocional y los reveals funcionan también en estático.
+    this.initPromo();
+    this.initReveals();
+
     if (!this.track || !this.canvas) return;
 
-    if (isStaticMode()) {
-      // Móvil / reduced motion: el CSS ya muestra el fallback estático.
-      // Si el usuario rota o agranda la ventana a escritorio, arrancamos.
-      window.addEventListener('resize', this.onResize, { passive: true });
+    window.addEventListener('resize', this.onResize, { passive: true });
+
+    if (this.isStatic()) {
+      // Reduced motion (o kill-switch móvil apagado): el CSS muestra el
+      // fallback estático. Si el viewport cambia, onResize reevalúa.
       return;
     }
 
+    this.applyLayout();
     this.start();
   }
+
+  // ¿Modo estático? Solo por reduced-motion o por el kill-switch del
+  // editor en móvil. El móvil "normal" ya corre el scrollytelling.
+  MsiLanding.prototype.isStatic = function () {
+    return (
+      prefersReducedMotion() ||
+      (isMobileViewport() && !this.mobileScrollyEnabled)
+    );
+  };
+
+  // Fija el layout (móvil/escritorio), la clase .is-scrolly que gobierna
+  // el CSS del hero y el nº de frames de la variante activa.
+  MsiLanding.prototype.applyLayout = function () {
+    this.mobileLayout = isMobileViewport();
+    this.root.classList.toggle('is-scrolly', this.mobileLayout);
+    var v = this.activeVariant();
+    this.frameCount = v ? v.count : this.desktopFrameCount;
+  };
+
+  MsiLanding.prototype.activeVariant = function () {
+    return this.mobileLayout && this.seq && this.seq.mobile
+      ? this.seq.mobile
+      : null;
+  };
 
   MsiLanding.prototype.start = function () {
     if (this.started || this.destroyed) return;
     this.started = true;
 
     var self = this;
+    // En móvil no hay pantalla de carga: el primer frame hace de póster
+    // y el scroll queda operativo desde el principio. (El listener de
+    // resize ya se registró en el constructor.)
+    var showLoader = !this.mobileLayout;
 
-    if (this.loader) this.loader.hidden = false;
+    if (showLoader && this.loader) this.loader.hidden = false;
 
-    this.preload(function () {
-      if (self.destroyed) return;
-      self.resizeCanvas();
-      window.addEventListener('scroll', self.onScroll, { passive: true });
-      window.addEventListener('resize', self.onResize, { passive: true });
-      self.onScroll();
-      // El original esperaba 600ms tras cargar antes de mostrar contenido.
-      setTimeout(function () {
-        self.hideLoader();
-      }, 600);
+    window.addEventListener('scroll', this.onScroll, { passive: true });
+
+    this.preload({
+      onFirst: function () {
+        if (self.destroyed) return;
+        self.resizeCanvas();
+        self.onScroll();
+      },
+      onInteractive: function () {
+        if (self.destroyed) return;
+        self.onScroll();
+        // Escritorio: soltamos el loader con la 1ª pasada (~1/8 de los
+        // frames); el resto rellena por detrás sin bloquear.
+        if (showLoader) {
+          setTimeout(function () {
+            self.hideLoader();
+          }, 300);
+        }
+      },
+      onComplete: function () {
+        if (self.destroyed) return;
+        self.onScroll();
+        if (showLoader) self.hideLoader();
+      }
     });
   };
 
   /* ---------- Precarga con progreso ---------- */
 
   MsiLanding.prototype.frameUrl = function (i) {
+    var v = this.activeVariant();
     var base = this.seq.base || this.framesBase;
-    var prefix = this.seq.prefix || this.framePrefix;
+    var prefix = v ? v.prefix : this.seq.prefix || this.framePrefix;
     if (base && base.slice(-1) !== '/') base += '/';
-    return base + prefix + pad4(i + 1) + this.frameExt;
+    var url = base + prefix + pad4(i + 1) + this.frameExt;
+    // Cache-buster de la secuencia clara de escritorio (data-frames-v-light).
+    // Las variantes -m no lo llevan: son archivos nuevos sin caché rancia
+    // (si algún día se re-suben, añadir aquí su propio buster).
+    if (!v && this.seq.id === 'verde-blanco' && this.framesVLight) {
+      url += '?v=' + this.framesVLight;
+    }
+    return url;
   };
 
-  MsiLanding.prototype.preload = function (done) {
+  // Precarga progresiva multi-pasada. hooks = { onFirst, onInteractive,
+  // onComplete } — cada uno se dispara una sola vez. La descarga va
+  // limitada a 6 conexiones para no saturar la radio del móvil ni
+  // bloquear el hilo principal (decoding async).
+  MsiLanding.prototype.preload = function (hooks) {
     var self = this;
-    var loaded = 0;
     var total = this.frameCount;
+    var order = buildLoadOrder(total);
     var fill = this.loader
       ? this.loader.querySelector('[data-msi-loader-fill]')
       : null;
     var label = this.loader
       ? this.loader.querySelector('[data-msi-loader-label]')
       : null;
-    var finished = false;
-
-    function onOne() {
-      loaded++;
-      var pct = Math.round((loaded / total) * 100);
-      if (fill) fill.style.width = pct + '%';
-      if (label) label.textContent = pct < 100 ? 'Cargando ' + pct + '%' : 'Listo';
-      if (loaded >= total && !finished) {
-        finished = true;
-        done();
-      }
-    }
+    // Fin de la primera pasada (zancada 8) + primero y último.
+    var interactiveAt = Math.min(total, Math.ceil(total / 8) + 2);
+    var i = 0;
+    var inFlight = 0;
+    var MAX_CONCURRENT = 6;
+    var firedFirst = false;
+    var firedInteractive = false;
+    var firedComplete = false;
+    // Si la secuencia cambia en mitad (toggle claro/oscuro), esta
+    // precarga queda huérfana y se apaga sola.
+    var mySeq = this.seq;
+    var myVariant = this.activeVariant();
 
     this.frames = new Array(total);
-    for (var i = 0; i < total; i++) {
-      (function (idx) {
-        var img = new Image();
-        img.onload = function () {
-          self.frames[idx] = img;
-          onOne();
-        };
-        // Un frame que falle no bloquea la experiencia.
-        img.onerror = onOne;
-        img.src = self.frameUrl(idx);
-      })(i);
+    this.loadedCount = 0;
+
+    function stale() {
+      return (
+        self.destroyed ||
+        self.seq !== mySeq ||
+        self.activeVariant() !== myVariant
+      );
     }
 
-    // Red de seguridad: si algo se cuelga (red lenta, CDN caído),
-    // continuamos a los 20s con lo que haya.
-    setTimeout(function () {
-      if (!finished) {
-        finished = true;
-        done();
+    function fire(which) {
+      if (which === 'first' && !firedFirst) {
+        firedFirst = true;
+        if (hooks.onFirst) hooks.onFirst();
+      } else if (which === 'interactive' && !firedInteractive) {
+        firedInteractive = true;
+        if (hooks.onInteractive) hooks.onInteractive();
+      } else if (which === 'complete' && !firedComplete) {
+        firedComplete = true;
+        if (hooks.onComplete) hooks.onComplete();
       }
+    }
+
+    function pump() {
+      if (stale()) return;
+      while (inFlight < MAX_CONCURRENT && i < order.length) {
+        (function (idx) {
+          inFlight++;
+          var img = new Image();
+          img.decoding = 'async';
+          if (idx === 0 && 'fetchPriority' in img) img.fetchPriority = 'high';
+          img.onload = img.onerror = function (e) {
+            inFlight--;
+            if (stale()) return;
+            // Un frame que falle no bloquea la experiencia.
+            if (e && e.type === 'load') self.frames[idx] = img;
+            self.loadedCount++;
+            var pct = Math.round((self.loadedCount / total) * 100);
+            if (fill) fill.style.width = pct + '%';
+            if (label) label.textContent = pct < 100 ? 'Cargando ' + pct + '%' : 'Listo';
+            if (idx === 0) fire('first');
+            if (self.loadedCount >= interactiveAt) fire('interactive');
+            // Si este frame está más cerca del objetivo que el pintado,
+            // repinta: la animación se refina sola según llega la red.
+            if (self.started) self.repaintIfCloser(idx);
+            if (self.loadedCount >= total) fire('complete');
+            pump();
+          };
+          img.src = self.frameUrl(idx);
+        })(order[i++]);
+      }
+    }
+
+    pump();
+
+    // Red de seguridad: si algo se cuelga (red lenta, CDN caído),
+    // seguimos a los 20s con lo que haya. fire() es idempotente.
+    setTimeout(function () {
+      if (stale()) return;
+      fire('first');
+      fire('interactive');
+      fire('complete');
     }, 20000);
+  };
+
+  /* ---------- Cambio de modo claro/oscuro en vivo ---------- */
+
+  MsiLanding.prototype.setColorMode = function (mode) {
+    if (mode === this.colorMode || this.swapping) return;
+    this.colorMode = mode;
+    this.bgColor = mode === 'light' ? '#fafbfc' : '#000000';
+    this.root.classList.toggle('msi-landing--light', mode === 'light');
+    this.root.setAttribute('data-color-mode', mode);
+    if (this.modeToggle) {
+      this.modeToggle.setAttribute('aria-checked', mode === 'light' ? 'true' : 'false');
+    }
+    try { window.localStorage.setItem('msi-color-mode', mode); } catch (e) {}
+
+    this.seq = SEQUENCES.filter(function (s) {
+      return s.id === (mode === 'light' ? 'verde-blanco' : 'verde');
+    })[0];
+
+    // En modo estático (móvil / reduced motion) no hay canvas: el CSS
+    // ya recoloreó la página y no hay nada más que hacer.
+    if (!this.started) return;
+
+    // Recarga la secuencia del nuevo modo y repinta en cuanto hay
+    // frames (en móvil sin pantalla de carga; en escritorio se suelta
+    // con la primera pasada). El flag "swapping" evita precargas
+    // solapadas si se pulsa dos veces seguidas.
+    var self = this;
+    this.swapping = true;
+    this.frames = [];
+    this.loadedCount = 0;
+    // Las viñetas dependen del tema (bordes negros ↔ blancos).
+    this.buildOverlay();
+    var showLoader = !this.mobileLayout;
+    if (showLoader && this.loader) {
+      this.loader.classList.remove('is-leaving');
+      this.loader.hidden = false;
+    }
+
+    function repaint() {
+      self.lastDrawn = -1;
+      self.lastDrawnSrc = -1;
+      self.drawFrame(Math.round(self.current));
+      self.lastDrawn = Math.round(self.current);
+    }
+
+    this.preload({
+      onFirst: function () {
+        if (self.destroyed) return;
+        repaint();
+      },
+      onInteractive: function () {
+        if (self.destroyed) return;
+        self.swapping = false;
+        repaint();
+        if (showLoader) self.hideLoader();
+      },
+      onComplete: function () {
+        if (self.destroyed) return;
+        self.swapping = false;
+        repaint();
+        if (showLoader) self.hideLoader();
+      }
+    });
   };
 
   MsiLanding.prototype.hideLoader = function () {
@@ -321,53 +575,225 @@
 
   MsiLanding.prototype.resizeCanvas = function () {
     var canvas = this.canvas;
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = canvas.offsetWidth * dpr;
-    canvas.height = canvas.offsetHeight * dpr;
+    // DPR capado más bajo en móvil: mitad de píxeles que procesar por
+    // frame y ninguna diferencia visible con los frames de 640px.
+    this.dpr = Math.min(window.devicePixelRatio || 1, this.mobileLayout ? 1.5 : 2);
+    var w = Math.round(canvas.offsetWidth * this.dpr);
+    var h = Math.round(canvas.offsetHeight * this.dpr);
+    // Guarda anti-thrash: iOS emite resize sin cambio real de tamaño.
+    if (canvas.width === w && canvas.height === h) return;
+    canvas.width = w;
+    canvas.height = h;
+    this.buildOverlay();
     this.lastDrawn = -1;
     this.drawFrame(Math.round(this.current));
     this.lastDrawn = Math.round(this.current);
   };
 
+  // Resize con debounce: reevalúa modo estático, cruce de breakpoint
+  // móvil↔escritorio (recarga la variante de frames adecuada) o un
+  // simple cambio de tamaño.
   MsiLanding.prototype.onResize = function () {
+    var self = this;
+    clearTimeout(this._resizeTimer);
+    this._resizeTimer = setTimeout(function () {
+      self.handleResize();
+    }, 200);
+  };
+
+  MsiLanding.prototype.handleResize = function () {
+    if (this.destroyed) return;
+    if (this.isStatic()) return; // el CSS del fallback manda
+
     if (!this.started) {
-      // Estábamos en modo estático y ahora hay hueco de escritorio.
-      if (!isStaticMode()) this.start();
+      // Estábamos en modo estático y ahora hay hueco para animar.
+      this.applyLayout();
+      this.start();
       return;
     }
+
+    var wasMobile = this.mobileLayout;
+    if (isMobileViewport() !== wasMobile) {
+      // Cruce de breakpoint: cambia la variante (61 ↔ 121 frames).
+      this.applyLayout();
+      this.reloadFrames();
+      return;
+    }
+
     this.resizeCanvas();
   };
 
-  // Dibuja un frame + todos los overlays. Portado 1:1 del original:
-  // fit "contain" con zoomFactor, estirado horizontal (naranja),
-  // brillo radial central (composite overlay), viñeta radial,
-  // gradientes de borde izq/dcha y arriba/abajo.
+  // Recarga la secuencia activa tras un cruce de breakpoint (mismo
+  // patrón que el cambio de tema, sin tocar el modo de color).
+  MsiLanding.prototype.reloadFrames = function () {
+    var self = this;
+    this.frames = [];
+    this.loadedCount = 0;
+    this.current = 0;
+    this.target = 0;
+    this.preload({
+      onFirst: function () {
+        if (self.destroyed) return;
+        self.resizeCanvas();
+        self.lastDrawn = -1;
+        self.lastDrawnSrc = -1;
+        self.drawFrame(Math.round(self.current));
+        self.lastDrawn = Math.round(self.current);
+        self.onScroll();
+      },
+      onInteractive: null,
+      onComplete: function () {
+        if (self.destroyed) return;
+        self.onScroll();
+      }
+    });
+  };
+
+  // Frame cargado más cercano al pedido (búsqueda en anillos ±d).
+  MsiLanding.prototype.nearestLoaded = function (idx) {
+    if (this.frames[idx]) return idx;
+    for (var d = 1; d < this.frameCount; d++) {
+      if (idx - d >= 0 && this.frames[idx - d]) return idx - d;
+      if (idx + d < this.frameCount && this.frames[idx + d]) return idx + d;
+    }
+    return -1;
+  };
+
+  // Al llegar un frame nuevo: si mejora al que hay en pantalla, repinta.
+  MsiLanding.prototype.repaintIfCloser = function (loadedIdx) {
+    var want = Math.round(this.current);
+    var have = this.lastDrawnSrc;
+    if (have === want && this.frames[want]) return;
+    if (have < 0 || Math.abs(loadedIdx - want) < Math.abs(have - want)) {
+      this.drawFrame(want);
+      this.lastDrawn = want;
+    }
+  };
+
+  // Pre-renderiza las capas estáticas (viñeta radial, bordes izq/dcha,
+  // degradados superior/inferior) en un canvas offscreen. Dependen solo
+  // del tamaño y del tema, así que crearlas por frame era tirar CPU —
+  // clave para que el scroll no dé tirones en móviles baratos.
+  MsiLanding.prototype.buildOverlay = function () {
+    var canvas = this.canvas;
+    if (!canvas.width || !canvas.height) {
+      this.overlayCanvas = null;
+      return;
+    }
+    var off = document.createElement('canvas');
+    off.width = canvas.width;
+    off.height = canvas.height;
+    var ctx = off.getContext('2d');
+    if (!ctx) {
+      this.overlayCanvas = null;
+      return;
+    }
+
+    var edgeRGB = this.colorMode === 'light' ? '255,255,255' : '0,0,0';
+    var cx = off.width / 2;
+    var cy = off.height / 2;
+
+    // Viñeta radial.
+    var outerR = Math.sqrt(cx * cx + cy * cy) * 1.1;
+    var innerR = Math.min(off.width, off.height) * 0.25;
+    var radial = ctx.createRadialGradient(cx, cy, innerR, cx, cy, outerR);
+    radial.addColorStop(0, 'rgba(' + edgeRGB + ',0)');
+    radial.addColorStop(0.35, 'rgba(' + edgeRGB + ',0)');
+    radial.addColorStop(0.58, 'rgba(' + edgeRGB + ',0.35)');
+    radial.addColorStop(0.76, 'rgba(' + edgeRGB + ',0.7)');
+    radial.addColorStop(1.0, 'rgba(' + edgeRGB + ',0.95)');
+    ctx.fillStyle = radial;
+    ctx.fillRect(0, 0, off.width, off.height);
+
+    // Gradiente de borde izquierdo.
+    var edgeW = off.width * 0.2;
+    var left = ctx.createLinearGradient(0, 0, edgeW, 0);
+    left.addColorStop(0, 'rgba(' + edgeRGB + ',1)');
+    left.addColorStop(0.35, 'rgba(' + edgeRGB + ',0.65)');
+    left.addColorStop(0.7, 'rgba(' + edgeRGB + ',0.18)');
+    left.addColorStop(1, 'rgba(' + edgeRGB + ',0)');
+    ctx.fillStyle = left;
+    ctx.fillRect(0, 0, edgeW, off.height);
+
+    // Gradiente de borde derecho.
+    var right = ctx.createLinearGradient(off.width - edgeW, 0, off.width, 0);
+    right.addColorStop(0, 'rgba(' + edgeRGB + ',0)');
+    right.addColorStop(0.3, 'rgba(' + edgeRGB + ',0.18)');
+    right.addColorStop(0.65, 'rgba(' + edgeRGB + ',0.65)');
+    right.addColorStop(1, 'rgba(' + edgeRGB + ',1)');
+    ctx.fillStyle = right;
+    ctx.fillRect(off.width - edgeW, 0, edgeW, off.height);
+
+    // Degradado superior — en móvil se reduce: la franja de texto ya
+    // trae su propio scrim en CSS y aquí solo hace falta un matiz.
+    var topH = off.height * (this.mobileLayout ? 0.1 : 0.18);
+    var top = ctx.createLinearGradient(0, 0, 0, topH);
+    top.addColorStop(0, 'rgba(' + edgeRGB + ',1)');
+    top.addColorStop(0.5, 'rgba(' + edgeRGB + ',0.5)');
+    top.addColorStop(1, 'rgba(' + edgeRGB + ',0)');
+    ctx.fillStyle = top;
+    ctx.fillRect(0, 0, off.width, topH);
+
+    // Degradado inferior.
+    var botH = off.height * 0.18;
+    var bot = ctx.createLinearGradient(0, off.height - botH, 0, off.height);
+    bot.addColorStop(0, 'rgba(' + edgeRGB + ',0)');
+    bot.addColorStop(0.5, 'rgba(' + edgeRGB + ',0.5)');
+    bot.addColorStop(1, 'rgba(' + edgeRGB + ',1)');
+    ctx.fillStyle = bot;
+    ctx.fillRect(0, off.height - botH, off.width, botH);
+
+    this.overlayCanvas = off;
+  };
+
+  // Dibuja el frame pedido (o el cargado más cercano, si aún no llegó)
+  // + los overlays. Escritorio: fit "contain" con zoomFactor y estirado
+  // opcional. Móvil: fit por ALTURA con el bote anclado abajo, para que
+  // nunca comparta píxeles con la franja de texto superior. Las capas
+  // estáticas (viñeta/bordes) vienen pre-renderizadas de buildOverlay.
   MsiLanding.prototype.drawFrame = function (frameIndex) {
     var canvas = this.canvas;
     var ctx = canvas.getContext('2d');
     if (!ctx) return;
-    var img = this.frames[frameIndex];
-    if (!img) return;
+    var srcIdx = this.nearestLoaded(frameIndex);
+    if (srcIdx < 0) return;
+    var img = this.frames[srcIdx];
+    this.lastDrawnSrc = srcIdx;
 
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var dpr = this.dpr || Math.min(window.devicePixelRatio || 1, 2);
     var W = canvas.width / dpr;
     var H = canvas.height / dpr;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#000000';
+    ctx.fillStyle = this.bgColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     var imgW = img.naturalWidth;
     var imgH = img.naturalHeight;
     if (!imgW || !imgH) return;
 
-    // Escalado "contain" + zoom de la secuencia.
-    var baseScale = Math.min(W / imgW, H / imgH);
-    var scale = baseScale * this.seq.zoomFactor;
-    var drawW = imgW * scale;
-    var drawH = imgH * scale;
-    var dx = (W - drawW) / 2;
-    var dy = (H - drawH) / 2;
+    var v = this.activeVariant();
+    var scale, drawW, drawH, dx, dy;
+    if (v) {
+      // Móvil: el frame ocupa heightFrac de la altura y su base apoya
+      // en anchorBottom. Si la secuencia es apaisada, el desborde
+      // lateral se capa a maxOverflowX (recorte simétrico).
+      scale = (H * v.heightFrac) / imgH;
+      if (imgW * scale > W * v.maxOverflowX) {
+        scale = (W * v.maxOverflowX) / imgW;
+      }
+      drawW = imgW * scale;
+      drawH = imgH * scale;
+      dx = (W - drawW) / 2;
+      dy = H * v.anchorBottom - drawH;
+    } else {
+      // Escritorio: "contain" + zoom de la secuencia.
+      scale = Math.min(W / imgW, H / imgH) * this.seq.zoomFactor;
+      drawW = imgW * scale;
+      drawH = imgH * scale;
+      dx = (W - drawW) / 2;
+      dy = (H - drawH) / 2;
+    }
 
     ctx.save();
     ctx.imageSmoothingEnabled = true;
@@ -375,7 +801,7 @@
 
     // Estirado horizontal de la secuencia naranja (35% más ancha,
     // 15% más baja), aplicado alrededor del centro de la imagen.
-    if (this.seq.stretchX !== 1 || this.seq.stretchY !== 1) {
+    if (!v && (this.seq.stretchX !== 1 || this.seq.stretchY !== 1)) {
       var centerX = (dx + drawW / 2) * dpr;
       var centerY = (dy + drawH / 2) * dpr;
       ctx.translate(centerX, centerY);
@@ -389,6 +815,7 @@
     var cy = canvas.height / 2;
 
     // Brillo sutil central (simula nitidez, composite "overlay").
+    // Dinámico porque compone contra el frame recién pintado.
     var sharpR = Math.min(canvas.width, canvas.height) * 0.28;
     var sharpen = ctx.createRadialGradient(cx, cy, 0, cx, cy, sharpR);
     sharpen.addColorStop(0, 'rgba(255,255,255,0.04)');
@@ -399,56 +826,90 @@
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.globalCompositeOperation = 'source-over';
 
-    // Viñeta radial hacia negro.
+    // Viñeta radial + bordes + degradados: pre-renderizados una vez.
+    if (!this.overlayCanvas) this.buildOverlay();
+    if (this.overlayCanvas) ctx.drawImage(this.overlayCanvas, 0, 0);
+
+    // Viñeta de marca: anillo exterior teñido de verde que interpola
+    // entre los dos verdes de la paleta según el avance del scroll.
+    // Alpha bajo a propósito — es un matiz, no un marco. Va sobre el
+    // índice PEDIDO (no el sustituto) para que el matiz siga al scroll.
     var outerR = Math.sqrt(cx * cx + cy * cy) * 1.1;
     var innerR = Math.min(canvas.width, canvas.height) * 0.25;
-    var radial = ctx.createRadialGradient(cx, cy, innerR, cx, cy, outerR);
-    radial.addColorStop(0, 'rgba(0,0,0,0)');
-    radial.addColorStop(0.35, 'rgba(0,0,0,0)');
-    radial.addColorStop(0.58, 'rgba(0,0,0,0.35)');
-    radial.addColorStop(0.76, 'rgba(0,0,0,0.7)');
-    radial.addColorStop(1.0, 'rgba(0,0,0,0.95)');
-    ctx.fillStyle = radial;
+    var t = this.frameCount > 1 ? frameIndex / (this.frameCount - 1) : 0;
+    var gr = Math.round(114 + (86 - 114) * t);  /* #72d52c → #56bf18 */
+    var gg = Math.round(213 + (191 - 213) * t);
+    var gb = Math.round(44 + (24 - 44) * t);
+    var tintRGB = gr + ',' + gg + ',' + gb;
+    var tint = ctx.createRadialGradient(cx, cy, innerR, cx, cy, outerR);
+    tint.addColorStop(0, 'rgba(' + tintRGB + ',0)');
+    tint.addColorStop(0.55, 'rgba(' + tintRGB + ',0)');
+    tint.addColorStop(0.8, 'rgba(' + tintRGB + ',0.08)');
+    tint.addColorStop(1, 'rgba(' + tintRGB + ',0.16)');
+    ctx.fillStyle = tint;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Gradiente de borde izquierdo.
-    var edgeW = canvas.width * 0.2;
-    var left = ctx.createLinearGradient(0, 0, edgeW, 0);
-    left.addColorStop(0, 'rgba(0,0,0,1)');
-    left.addColorStop(0.35, 'rgba(0,0,0,0.65)');
-    left.addColorStop(0.7, 'rgba(0,0,0,0.18)');
-    left.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = left;
-    ctx.fillRect(0, 0, edgeW, canvas.height);
-
-    // Gradiente de borde derecho.
-    var right = ctx.createLinearGradient(canvas.width - edgeW, 0, canvas.width, 0);
-    right.addColorStop(0, 'rgba(0,0,0,0)');
-    right.addColorStop(0.3, 'rgba(0,0,0,0.18)');
-    right.addColorStop(0.65, 'rgba(0,0,0,0.65)');
-    right.addColorStop(1, 'rgba(0,0,0,1)');
-    ctx.fillStyle = right;
-    ctx.fillRect(canvas.width - edgeW, 0, edgeW, canvas.height);
-
-    // Degradado superior.
-    var topH = canvas.height * 0.18;
-    var top = ctx.createLinearGradient(0, 0, 0, topH);
-    top.addColorStop(0, 'rgba(0,0,0,1)');
-    top.addColorStop(0.5, 'rgba(0,0,0,0.5)');
-    top.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = top;
-    ctx.fillRect(0, 0, canvas.width, topH);
-
-    // Degradado inferior.
-    var botH = canvas.height * 0.18;
-    var bot = ctx.createLinearGradient(0, canvas.height - botH, 0, canvas.height);
-    bot.addColorStop(0, 'rgba(0,0,0,0)');
-    bot.addColorStop(0.5, 'rgba(0,0,0,0.5)');
-    bot.addColorStop(1, 'rgba(0,0,0,1)');
-    ctx.fillStyle = bot;
-    ctx.fillRect(0, canvas.height - botH, canvas.width, botH);
-
     ctx.restore();
+  };
+
+  /* ---------- Vídeo promocional (autoplay en viewport) ---------- */
+
+  MsiLanding.prototype.initPromo = function () {
+    var section = this.root.querySelector('[data-msi-promo]');
+    var video = this.root.querySelector('[data-msi-promo-video]');
+    if (!section || !video) return;
+
+    // Reduced motion: solo el póster; el CSS deja el overlay visible.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    function tryPlay() {
+      video.muted = true; // garantiza el autoplay en todos los navegadores
+      var p = video.play();
+      if (p && p.catch) p.catch(function () { /* autoplay bloqueado: queda el póster */ });
+    }
+
+    if (!('IntersectionObserver' in window)) {
+      section.classList.add('is-visible');
+      tryPlay();
+      return;
+    }
+
+    this.promoObserver = new IntersectionObserver(function (entries) {
+      for (var i = 0; i < entries.length; i++) {
+        if (entries[i].isIntersecting) {
+          section.classList.add('is-visible');
+          tryPlay();
+        } else {
+          video.pause();
+        }
+      }
+    }, { threshold: 0.25 });
+    this.promoObserver.observe(section);
+  };
+
+  /* ---------- Reveals de secciones (IntersectionObserver) ---------- */
+
+  MsiLanding.prototype.initReveals = function () {
+    if (prefersReducedMotion() || !('IntersectionObserver' in window)) return;
+    var els = this.root.querySelectorAll('[data-msi-reveal]');
+    if (!els.length) return;
+    // La clase gate activa el estado oculto SOLO cuando el JS está listo:
+    // sin JS (o sin IO) nada queda invisible.
+    this.root.classList.add('msi-reveal-ready');
+    this.revealObserver = new IntersectionObserver(
+      function (entries, observer) {
+        for (var i = 0; i < entries.length; i++) {
+          if (entries[i].isIntersecting) {
+            entries[i].target.classList.add('is-inview');
+            observer.unobserve(entries[i].target);
+          }
+        }
+      },
+      { rootMargin: '0px 0px -10% 0px', threshold: 0.1 }
+    );
+    for (var i = 0; i < els.length; i++) {
+      this.revealObserver.observe(els[i]);
+    }
   };
 
   /* ---------- Limpieza (editor de temas) ---------- */
@@ -456,9 +917,19 @@
   MsiLanding.prototype.destroy = function () {
     this.destroyed = true;
     cancelAnimationFrame(this.raf);
+    clearTimeout(this._resizeTimer);
     window.removeEventListener('scroll', this.onScroll);
     window.removeEventListener('resize', this.onResize);
+    if (this.promoObserver) {
+      this.promoObserver.disconnect();
+      this.promoObserver = null;
+    }
+    if (this.revealObserver) {
+      this.revealObserver.disconnect();
+      this.revealObserver = null;
+    }
     this.frames = [];
+    this.overlayCanvas = null;
   };
 
   /* ---------- Arranque + soporte del editor de temas ---------- */
