@@ -70,10 +70,10 @@
   color: var(--msi-orange);
 }
 .msi-nav-logo-sub {
-  font-size: 0.55rem;
-  letter-spacing: 0.25em;
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.55);
 }
 /* Logo de imagen (nav / loader / footer). align-self evita que el
    flex column del nav lo estire al ancho del subtítulo. */
@@ -105,24 +105,34 @@
 .msi-nav-menu a:hover {
   color: #fff;
 }
-.msi-nav-cta {
+/* CTA de cabecera: naranja de marca sólido en AMBOS temas — mismo peso
+   visual siempre y sin fotogramas ilegibles durante el cambio de tema.
+   (.msi-landing delante para ganar a ".msi-landing a { color:inherit }") */
+.msi-landing .msi-nav-cta {
   position: relative;
   overflow: hidden;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  border-radius: 0.75rem;
+  border-radius: 9999px;
   font-size: 0.875rem;
-  font-weight: 600;
-  color: #fff;
-  padding: 0.625rem 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
-  backdrop-filter: blur(12px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: inset 0 0 8px 0 rgba(255, 255, 255, 0.1),
-    0 8px 32px 0 rgba(0, 0, 0, 0.3);
-  transition: all 0.3s;
+  font-weight: 700;
+  white-space: nowrap;
+  color: #16181d;
+  padding: 0.75rem 1.5rem;
+  background: var(--msi-orange);
+  border: none;
+  box-shadow: 0 8px 24px rgba(232, 98, 10, 0.35);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+@media (max-width: 479px) {
+  .msi-nav-cta {
+    padding: 0.625rem 1.125rem;
+  }
+  /* En móvil el nav respira: logo grande, CTA compacto, sin URL */
+  .msi-nav-logo-sub {
+    display: none;
+  }
 }
 .msi-nav-cta:hover {
   transform: scale(1.05) translateY(-2px);
@@ -366,7 +376,7 @@
   font-weight: 300;
   margin-top: 1.25rem;
   max-width: 20rem;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.72);
 }
 .msi-beat--a .msi-beat-sub {
   margin-top: 1.5rem;
@@ -487,9 +497,11 @@
    - CON .is-scrolly (móvil normal): scrollytelling real. El canvas
      dibuja el bote anclado abajo y los beats viven en la franja
      superior con su propio scrim — texto y producto nunca se pisan.
-   - SIN .is-scrolly (reduced-motion, kill-switch del editor o JS
-     caído): fallback estático mejorado — imagen en el 58% superior,
-     texto abajo sobre scrim sólido. */
+   - SIN .is-scrolly (reduced-motion, kill-switch del editor, JS caído
+     o el instante antes de que el JS arranque): fallback estático en
+     DOS BANDAS APILADAS — imagen arriba (banda flexible), texto abajo
+     sobre el fondo de la página. Sin overlays: la colisión es
+     estructuralmente imposible, también durante el FOUC de carga. */
 .msi-hero-mobile {
   display: none;
 }
@@ -516,24 +528,20 @@
     justify-content: flex-end;
     position: absolute;
     inset: 0;
-    padding: 0 1.5rem calc(3rem + env(safe-area-inset-bottom, 0px));
+    padding: 0 1.5rem calc(2.5rem + env(safe-area-inset-bottom, 0px));
     z-index: 2;
-    background: linear-gradient(
-      to top,
-      rgba(5, 5, 5, 0.96) 0%,
-      rgba(5, 5, 5, 0.92) 48%,
-      rgba(5, 5, 5, 0.35) 62%,
-      rgba(5, 5, 5, 0.55) 100%
-    );
   }
   .msi-landing.is-scrolly .msi-hero-mobile {
     display: none;
   }
 }
+/* Banda superior: la imagen ocupa el hueco que el texto no necesita */
 .msi-hero-mobile-img {
-  position: absolute;
-  inset: 0 0 42% 0; /* la imagen vive en el 58% superior; el texto, abajo */
-  z-index: -1;
+  position: relative;
+  align-self: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 4rem -0.5rem 1.25rem;
   overflow: hidden;
 }
 .msi-hero-mobile-img img,
@@ -541,8 +549,7 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  object-position: center 35%;
-  padding: 4.5rem 1.5rem 0;
+  object-position: center bottom;
 }
 .msi-hero-mobile .msi-beat-tag {
   margin-bottom: 1rem;
@@ -565,18 +572,8 @@
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
-/* Variante clara del fallback (antes no existía: scrim y textos fijos
-   en oscuro aunque la página estuviera en claro). El :not() iguala la
-   especificidad de la regla base de la media query. */
-.msi-landing--light:not(.is-scrolly) .msi-hero-mobile {
-  background: linear-gradient(
-    to top,
-    rgba(250, 251, 252, 0.97) 0%,
-    rgba(250, 251, 252, 0.93) 48%,
-    rgba(250, 251, 252, 0.4) 62%,
-    rgba(250, 251, 252, 0.6) 100%
-  );
-}
+/* Variante clara del fallback: solo re-colorea texto (las bandas
+   apiladas no necesitan scrim — el fondo es el de la página) */
 .msi-landing--light .msi-hero-mobile .msi-beat-title {
   color: #16181d;
 }
@@ -597,7 +594,8 @@
 /* ---------- Scrollytelling móvil/tablet (.is-scrolly) ---------- */
 @media (max-width: 1023px) {
   .msi-landing.is-scrolly .msi-hero {
-    height: 400vh; /* menos scroll-fatiga que los 500vh de escritorio */
+    /* ~3 pantallas de scroll para 4 beats: cada swipe pasa un texto */
+    height: 300vh;
   }
   /* Scrim de la franja de texto: el canvas ancla el bote abajo, así
      que el 46% superior es zona de lectura garantizada */
@@ -605,13 +603,13 @@
     content: "";
     position: absolute;
     inset: 0 0 auto 0;
-    height: 46%;
+    height: 52%;
     z-index: 1;
     pointer-events: none;
     background: linear-gradient(
       to bottom,
       rgba(5, 5, 5, 0.94) 0%,
-      rgba(5, 5, 5, 0.8) 45%,
+      rgba(5, 5, 5, 0.85) 42%,
       rgba(5, 5, 5, 0) 100%
     );
   }
@@ -619,7 +617,7 @@
     background: linear-gradient(
       to bottom,
       rgba(250, 251, 252, 0.95) 0%,
-      rgba(250, 251, 252, 0.82) 45%,
+      rgba(250, 251, 252, 0.85) 42%,
       rgba(250, 251, 252, 0) 100%
     );
   }
@@ -677,7 +675,7 @@
 }
 .msi-section-head {
   text-align: center;
-  margin-bottom: 5rem;
+  margin-bottom: clamp(3rem, 8vw, 5rem);
 }
 .msi-eyebrow {
   display: block;
@@ -696,7 +694,7 @@
   margin-bottom: 1.25rem;
 }
 .msi-section-sub {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.65);
   max-width: 32rem;
   margin: 0 auto;
   line-height: 1.625;
@@ -781,7 +779,9 @@
   text-transform: uppercase;
   padding: 0.375rem 0.75rem;
   border-radius: 9999px;
-  color: #fff;
+  /* Texto oscuro: los tres acentos (naranja/verde/dorado) son claros
+     y con blanco quedaban a 2.2-3.4:1 */
+  color: #16181d;
 }
 .msi-product-tag--1 {
   background: var(--msi-orange);
@@ -799,10 +799,10 @@
   padding: 1.75rem;
 }
 .msi-product-line {
-  font-size: 0.65rem;
-  letter-spacing: 0.2em;
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.55);
   margin-bottom: 0.5rem;
 }
 .msi-product-name {
@@ -834,11 +834,14 @@
   font-weight: 400;
   color: rgba(255, 255, 255, 0.4);
 }
-.msi-buy-btn {
+/* .msi-landing delante: sin él, ".msi-landing a { color: inherit }"
+   gana por especificidad y el texto vuelve a blanco */
+.msi-landing .msi-buy-btn {
   font-size: 0.875rem;
-  font-weight: 600;
-  color: #fff;
-  padding: 0.625rem 1rem;
+  font-weight: 700;
+  /* Texto oscuro sobre los acentos claros (blanco fallaba AA) */
+  color: #16181d;
+  padding: 0.75rem 1.25rem;
   border-radius: 0.5rem;
   transition: all 0.2s;
 }
@@ -855,9 +858,9 @@
 .msi-buy-btn--3 {
   background: var(--msi-gold);
 }
-.msi-buy-btn.is-soldout {
+.msi-landing .msi-buy-btn.is-soldout {
   background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.12);
   cursor: not-allowed;
 }
@@ -872,13 +875,8 @@
    secciones. La sección sigue al tema; el marco cambia de borde. */
 .msi-promo {
   position: relative;
-  padding: 3rem 1.25rem;
+  padding: clamp(4rem, 9vw, 5rem) clamp(1.25rem, 5vw, 2rem);
   background: #000;
-}
-@media (min-width: 768px) {
-  .msi-promo {
-    padding: 5rem 2rem;
-  }
 }
 .msi-promo-frame {
   position: relative;
@@ -1016,15 +1014,16 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: rgba(255, 255, 255, 0.75);
 }
+/* Aviso de seguridad del consumidor: de lo MÁS legible, no de lo menos */
 .msi-audiences-note {
   margin-top: 2.5rem;
   text-align: center;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   line-height: 1.6;
   max-width: 44rem;
   margin-left: auto;
   margin-right: auto;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.65);
 }
 
 /* ---------- Fondo "aurora" de marca ----------
@@ -1160,7 +1159,7 @@
   text-transform: uppercase;
   padding: 0.375rem 1rem;
   border-radius: 9999px;
-  color: #fff;
+  color: #16181d;
   margin-bottom: 1.5rem;
   background: var(--msi-orange);
   box-shadow: 0 4px 16px rgba(232, 98, 10, 0.35);
@@ -1186,10 +1185,10 @@
   letter-spacing: 0.2em;
   text-transform: uppercase;
   margin: 0.25rem 0 1.5rem;
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.6);
 }
 .msi-pack--featured .msi-pack-label {
-  color: #9ca3af;
+  color: #6b7280;
 }
 .msi-pack-img {
   position: relative;
@@ -1220,13 +1219,14 @@
 .msi-pack--featured .msi-pack-price {
   color: var(--msi-navy);
 }
+/* El €/unidad es EL argumento de venta del pack: legible, no decorativo */
 .msi-pack-perunit {
   font-size: 0.875rem;
   margin-bottom: 1rem;
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.6);
 }
 .msi-pack--featured .msi-pack-perunit {
-  color: #9ca3af;
+  color: #6b7280;
 }
 .msi-pack-shipping {
   font-size: 0.875rem;
@@ -1246,7 +1246,7 @@
   letter-spacing: 0.05em;
   padding: 0.125rem 0.5rem;
   border-radius: 0.25rem;
-  color: #fff;
+  color: #16181d;
   background: var(--msi-green);
 }
 .msi-pack-btn {
@@ -1414,7 +1414,7 @@
 }
 .msi-benefit-desc {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.62);
   line-height: 1.625;
 }
 
@@ -1486,27 +1486,30 @@ img.msi-img-pos-top {
   display: flex;
   align-items: flex-end;
   padding: 1.25rem;
-  background: linear-gradient(to top, rgba(5, 5, 5, 0.75) 0%, transparent 50%);
+  background: linear-gradient(to top, rgba(5, 5, 5, 0.82) 0%, transparent 55%);
 }
 .msi-lifestyle-item:hover .msi-lifestyle-overlay {
   opacity: 1;
 }
+/* Sin hover en táctil: la etiqueta va siempre visible sobre su scrim */
+@media (hover: none), (max-width: 1023px) {
+  .msi-lifestyle-overlay {
+    opacity: 1;
+  }
+}
 .msi-lifestyle-overlay span {
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   color: #fff;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
 }
 
 /* ---------- Newsletter ---------- */
 .msi-newsletter {
-  padding: 5rem 2rem;
+  padding: clamp(4rem, 9vw, 5rem) clamp(1.25rem, 5vw, 4rem);
   text-align: center;
   background: linear-gradient(135deg, var(--msi-orange) 0%, #c44d00 100%);
-}
-@media (min-width: 768px) {
-  .msi-newsletter {
-    padding: 5rem 4rem;
-  }
 }
 .msi-newsletter h2 {
   font-size: clamp(1.75rem, 1.2rem + 2.5vw, 2.25rem);
@@ -1516,7 +1519,7 @@ img.msi-img-pos-top {
   margin-bottom: 0.75rem;
 }
 .msi-newsletter p {
-  color: rgba(255, 255, 255, 0.75);
+  color: #ffffff;
   margin-bottom: 2.5rem;
   font-size: 1.125rem;
 }
@@ -1588,14 +1591,9 @@ img.msi-img-pos-top {
 
 /* ---------- Footer ---------- */
 .msi-footer {
-  padding: 4rem 2rem;
+  padding: clamp(4rem, 9vw, 5rem) clamp(1.25rem, 5vw, 4rem);
   background: #040404;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-@media (min-width: 768px) {
-  .msi-footer {
-    padding: 4rem 4rem;
-  }
 }
 .msi-footer-grid {
   display: grid;
@@ -1620,7 +1618,7 @@ img.msi-img-pos-top {
 }
 .msi-footer-brand p {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.55);
   line-height: 1.625;
   max-width: 20rem;
 }
@@ -1637,12 +1635,14 @@ img.msi-img-pos-top {
   gap: 0.75rem;
 }
 .msi-footer ul a {
+  display: inline-block;
+  padding: 0.25rem 0; /* zona táctil digna sin cambiar el ritmo visual */
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.6);
   transition: color 0.2s;
 }
 .msi-footer ul a:hover {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.9);
 }
 .msi-footer-bottom {
   display: flex;
@@ -1660,7 +1660,7 @@ img.msi-img-pos-top {
 }
 .msi-footer-bottom span {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 /* ---------- Placeholder para imágenes sin asignar ---------- */
@@ -1698,15 +1698,7 @@ img.msi-img-pos-top {
 .msi-landing--light .msi-nav-logo-sub { color: #5b6272; }
 .msi-landing--light .msi-nav-menu a { color: #5b6272; }
 .msi-landing--light .msi-nav-menu a:hover { color: #16181d; }
-.msi-landing--light .msi-nav-cta {
-  color: #16181d;
-  background: rgba(22, 24, 29, 0.05);
-  border: 1px solid rgba(22, 24, 29, 0.15);
-  box-shadow: inset 0 0 8px 0 rgba(22, 24, 29, 0.08), 0 8px 32px 0 rgba(0, 0, 0, 0.12);
-}
-.msi-landing--light .msi-nav-cta::before {
-  background: linear-gradient(to right, transparent, rgba(22, 24, 29, 0.08), transparent);
-}
+/* El CTA de cabecera ya es naranja sólido en la base: mismo peso en claro */
 
 /* Loader */
 .msi-landing--light .msi-loader { background: #fafbfc; }
@@ -1770,7 +1762,7 @@ img.msi-img-pos-top {
 .msi-landing--light .msi-product-price small { color: #5b6272; }
 .msi-landing--light .msi-buy-btn.is-soldout {
   background: rgba(22, 24, 29, 0.08);
-  color: rgba(22, 24, 29, 0.5);
+  color: rgba(22, 24, 29, 0.65);
   border: 1px solid rgba(22, 24, 29, 0.15);
 }
 /* CTA verde: texto oscuro sobre verde (blanco daba ~1.9:1; oscuro ~9.5:1) */
@@ -1859,8 +1851,9 @@ img.msi-img-pos-top {
   color: #16181d;
   box-shadow: 0 4px 16px rgba(0, 196, 207, 0.35);
 }
+/* Arranca en un teal más oscuro: el blanco del h2/p pasa de ~2.6:1 a >4.5:1 */
 .msi-landing--light .msi-newsletter {
-  background: linear-gradient(135deg, #00b3bd 0%, var(--msi-teal-ink) 100%);
+  background: linear-gradient(135deg, #009aa3 0%, var(--msi-teal-ink) 100%);
 }
 .msi-landing--light .msi-promo { background: #fafbfc; }
 .msi-landing--light .msi-promo-frame {
@@ -1871,14 +1864,16 @@ img.msi-img-pos-top {
 /* Productos en claro: las cajas de foto dejan de ser bloques negros
    planos — glow de acento permanente desde abajo (las fotos ya son
    PNG/webp recortados con alpha, incluida la del spray). */
+/* Tema claro: bases CLARAS con glow de acento suave — las losas negras
+   rompían la página blanca (las fotos son webp recortados con alpha) */
 .msi-landing--light .msi-product-media--1 {
-  background: radial-gradient(130% 100% at 50% 100%, color-mix(in srgb, var(--msi-orange) 24%, #0d0804) 0%, #0d0804 60%);
+  background: radial-gradient(130% 100% at 50% 100%, color-mix(in srgb, var(--msi-orange) 22%, #eef1f4) 0%, #eef1f4 65%);
 }
 .msi-landing--light .msi-product-media--2 {
-  background: radial-gradient(130% 100% at 50% 100%, color-mix(in srgb, var(--msi-teal) 26%, #060d04) 0%, #060d04 60%);
+  background: radial-gradient(130% 100% at 50% 100%, color-mix(in srgb, var(--msi-teal) 24%, #eef1f4) 0%, #eef1f4 65%);
 }
 .msi-landing--light .msi-product-media--3 {
-  background: radial-gradient(130% 100% at 50% 100%, color-mix(in srgb, var(--msi-gold) 24%, #0a0a08) 0%, #0a0a08 60%);
+  background: radial-gradient(130% 100% at 50% 100%, color-mix(in srgb, var(--msi-gold) 24%, #eef1f4) 0%, #eef1f4 65%);
 }
 
 /* Para quién (audiencias) en claro: tarjetas blancas elevadas sobre
@@ -1914,7 +1909,7 @@ img.msi-img-pos-top {
   width: 64px;
   height: 36px;
   border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   background: #131313;
   box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6), 0 4px 16px rgba(0, 0, 0, 0.45);
   padding: 0;
@@ -1980,8 +1975,8 @@ img.msi-img-pos-top {
    Gateados por .msi-reveal-ready (la añade el JS): sin JS nada queda oculto. */
 .msi-landing.msi-reveal-ready [data-msi-reveal] {
   opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  transform: translateY(14px);
+  transition: opacity 0.45s ease-out, transform 0.45s ease-out;
 }
 .msi-landing.msi-reveal-ready [data-msi-reveal].is-inview {
   opacity: 1;

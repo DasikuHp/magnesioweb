@@ -99,7 +99,10 @@
       accent: '#7bc144', glow: 'rgba(123,193,68,0.8)',
       // Secuencia clara apaisada (960x720): se ancla por altura y el
       // sobrante lateral se recorta simétrico al dibujar.
-      mobile: { prefix: 'verde-blanco-frame-m_', count: 61, heightFrac: 0.58, anchorBottom: 0.95, maxOverflowX: 1.45 },
+      // heightFrac más alto que en la oscura: el bote ocupa menos alto
+      // dentro de este frame apaisado — así el TAMAÑO VISUAL del bote
+      // queda igual en ambos temas (consistencia al alternar).
+      mobile: { prefix: 'verde-blanco-frame-m_', count: 61, heightFrac: 0.72, anchorBottom: 0.96, maxOverflowX: 1.6 },
       beats: {
         a: { tag: 'Salud Articular y Ósea', title: 'MAGNESIO<br>COLÁGENO', sub: 'Sinergia total para huesos, piel y articulaciones.' },
         b: { tag: 'Recuperación activa', title: 'Huesos<br>fuertes', sub: 'Colágeno + Magnesio en sinergia para máxima protección articular y ósea.' },
@@ -247,13 +250,20 @@
     );
   };
 
-  // Fija el layout (móvil/escritorio), la clase .is-scrolly que gobierna
-  // el CSS del hero y el nº de frames de la variante activa.
+  // Fija el layout (móvil/escritorio) y el nº de frames de la variante.
+  // La clase .is-scrolly NO se pone aquí: se añade en markScrollyReady()
+  // cuando el canvas ya tiene su primer frame pintado — hasta entonces
+  // el fallback estático hace de póster y nunca se ve un canvas vacío
+  // ni un fogonazo al cargar/recargar.
   MsiLanding.prototype.applyLayout = function () {
     this.mobileLayout = isMobileViewport();
-    this.root.classList.toggle('is-scrolly', this.mobileLayout);
+    if (!this.mobileLayout) this.root.classList.remove('is-scrolly');
     var v = this.activeVariant();
     this.frameCount = v ? v.count : this.desktopFrameCount;
+  };
+
+  MsiLanding.prototype.markScrollyReady = function () {
+    if (this.mobileLayout) this.root.classList.add('is-scrolly');
   };
 
   MsiLanding.prototype.activeVariant = function () {
@@ -279,6 +289,8 @@
     this.preload({
       onFirst: function () {
         if (self.destroyed) return;
+        // Con el primer frame listo, el scrolly sustituye al póster.
+        self.markScrollyReady();
         self.resizeCanvas();
         self.onScroll();
       },
@@ -634,6 +646,7 @@
     this.preload({
       onFirst: function () {
         if (self.destroyed) return;
+        self.markScrollyReady();
         self.resizeCanvas();
         self.lastDrawn = -1;
         self.lastDrawnSrc = -1;
