@@ -3,7 +3,14 @@
   "sections": {
     "main": {
       "type": "msi-landing",
-      "settings": {}
+      "settings": {
+        "product_1": "magnesio-con-vitamina-c",
+        "product_2": "magnesio-con-colageno",
+        "product_3": "aceite-de-magnesio",
+        "pack_1_variant_id": "57770820370767",
+        "pack_4_variant_id": "58248077181263",
+        "pack_6_variant_id": "58248077934927"
+      }
     }
   },
   "order": ["main"]

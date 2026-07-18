@@ -102,7 +102,10 @@
       // heightFrac más alto que en la oscura: el bote ocupa menos alto
       // dentro de este frame apaisado — así el TAMAÑO VISUAL del bote
       // queda igual en ambos temas (consistencia al alternar).
-      mobile: { prefix: 'verde-blanco-frame-m_', count: 61, heightFrac: 0.72, anchorBottom: 0.96, maxOverflowX: 1.6 },
+      // maxOverflowX 2.4: con 1.6 el cap reducía la escala en iPhone y
+      // el bote claro salía un 20% más pequeño y blando que el oscuro;
+      // el bote ocupa el tercio central del frame, el recorte es seguro.
+      mobile: { prefix: 'verde-blanco-frame-m_', count: 61, heightFrac: 0.72, anchorBottom: 0.96, maxOverflowX: 2.4 },
       beats: {
         a: { tag: 'Salud Articular y Ósea', title: 'MAGNESIO<br>COLÁGENO', sub: 'Sinergia total para huesos, piel y articulaciones.' },
         b: { tag: 'Recuperación activa', title: 'Huesos<br>fuertes', sub: 'Colágeno + Magnesio en sinergia para máxima protección articular y ósea.' },
@@ -175,6 +178,8 @@
     this.framePrefix = root.getAttribute('data-frame-prefix') || 'frame_';
     this.frameExt = root.getAttribute('data-frame-ext') || '.webp';
     this.framesVLight = root.getAttribute('data-frames-v-light') || '';
+    this.framesVmDark = root.getAttribute('data-frames-v-m-dark') || '';
+    this.framesVmLight = root.getAttribute('data-frames-v-m-light') || '';
     this.colorMode = root.getAttribute('data-color-mode') || 'dark';
     // La elección del visitante (interruptor) manda sobre el ajuste
     // del editor y sobrevive a la recarga.
@@ -208,6 +213,11 @@
     this.onScroll = this.onScroll.bind(this);
     this.onResize = this.onResize.bind(this);
     this.loop = this.loop.bind(this);
+    // Safari puede prerenderizar o restaurar de bfcache sin emitir
+    // resize: re-medimos el canvas al volver a ser visibles.
+    this.onVisible = function () {
+      if (!document.hidden) self.onResize();
+    };
 
     // Interruptor claro/oscuro (estilo iOS).
     var self = this;
@@ -230,6 +240,8 @@
     if (!this.track || !this.canvas) return;
 
     window.addEventListener('resize', this.onResize, { passive: true });
+    window.addEventListener('pageshow', this.onResize, { passive: true });
+    document.addEventListener('visibilitychange', this.onVisible);
 
     if (this.isStatic()) {
       // Reduced motion (o kill-switch móvil apagado): el CSS muestra el
@@ -257,13 +269,23 @@
   // ni un fogonazo al cargar/recargar.
   MsiLanding.prototype.applyLayout = function () {
     this.mobileLayout = isMobileViewport();
-    if (!this.mobileLayout) this.root.classList.remove('is-scrolly');
+    // is-canvas-ready se retira siempre: hasta que el canvas de la nueva
+    // variante tenga frame pintado, el poster estático hace de fondo.
+    this.root.classList.remove('is-canvas-ready');
+    if (!this.mobileLayout) {
+      this.root.classList.remove('is-scrolly');
+    } else if (this.started) {
+      this.root.classList.add('is-scrolly');
+    }
     var v = this.activeVariant();
     this.frameCount = v ? v.count : this.desktopFrameCount;
   };
 
   MsiLanding.prototype.markScrollyReady = function () {
-    if (this.mobileLayout) this.root.classList.add('is-scrolly');
+    if (this.mobileLayout) {
+      this.root.classList.add('is-scrolly');
+      this.root.classList.add('is-canvas-ready');
+    }
   };
 
   MsiLanding.prototype.activeVariant = function () {
@@ -283,6 +305,14 @@
     var showLoader = !this.mobileLayout;
 
     if (showLoader && this.loader) this.loader.hidden = false;
+
+    // En móvil reservamos ya el alto de 300vh (.is-scrolly): así la página
+    // no pega un salto de layout bajo el dedo cuando llega el frame 0.
+    // El poster sigue visible hasta is-canvas-ready (markScrollyReady).
+    if (this.mobileLayout) this.root.classList.add('is-scrolly');
+    // Dimensiona el bitmap cuanto antes (en escritorio el canvas ya es
+    // visible): nunca debe quedar el 300x150 intrínseco en pantalla.
+    this.resizeCanvas();
 
     window.addEventListener('scroll', this.onScroll, { passive: true });
 
@@ -321,10 +351,12 @@
     var prefix = v ? v.prefix : this.seq.prefix || this.framePrefix;
     if (base && base.slice(-1) !== '/') base += '/';
     var url = base + prefix + pad4(i + 1) + this.frameExt;
-    // Cache-buster de la secuencia clara de escritorio (data-frames-v-light).
-    // Las variantes -m no lo llevan: son archivos nuevos sin caché rancia
-    // (si algún día se re-suben, añadir aquí su propio buster).
-    if (!v && this.seq.id === 'verde-blanco' && this.framesVLight) {
+    // Cache-busters: el ?v= de asset_url cambia al re-subir los archivos,
+    // así el navegador/CDN nunca sirve frames rancios con otra geometría.
+    if (v) {
+      var mv = this.seq.id === 'verde-blanco' ? this.framesVmLight : this.framesVmDark;
+      if (mv) url += '?v=' + mv;
+    } else if (this.seq.id === 'verde-blanco' && this.framesVLight) {
       url += '?v=' + this.framesVLight;
     }
     return url;
@@ -352,6 +384,7 @@
     var firedFirst = false;
     var firedInteractive = false;
     var firedComplete = false;
+    var zeroFailed = false;
     // Si la secuencia cambia en mitad (toggle claro/oscuro), esta
     // precarga queda huérfana y se apaga sola.
     var mySeq = this.seq;
@@ -393,13 +426,18 @@
             inFlight--;
             if (stale()) return;
             // Un frame que falle no bloquea la experiencia.
-            if (e && e.type === 'load') self.frames[idx] = img;
+            var ok = e && e.type === 'load';
+            if (ok) self.frames[idx] = img;
+            if (idx === 0 && !ok) zeroFailed = true;
             self.loadedCount++;
             var pct = Math.round((self.loadedCount / total) * 100);
             if (fill) fill.style.width = pct + '%';
             if (label) label.textContent = pct < 100 ? 'Cargando ' + pct + '%' : 'Listo';
-            if (idx === 0) fire('first');
-            if (self.loadedCount >= interactiveAt) fire('interactive');
+            // 'first' exige un frame REAL: el 0 cargado o, si el 0 falló,
+            // el primero que llegue bien. Un onerror solo jamás retira el
+            // poster (antes activaba un canvas vacío o con la pose final).
+            if (self.frames[0] || (ok && zeroFailed)) fire('first');
+            if (firedFirst && self.loadedCount >= interactiveAt) fire('interactive');
             // Si este frame está más cerca del objetivo que el pintado,
             // repinta: la animación se refina sola según llega la red.
             if (self.started) self.repaintIfCloser(idx);
@@ -415,8 +453,15 @@
 
     // Red de seguridad: si algo se cuelga (red lenta, CDN caído),
     // seguimos a los 20s con lo que haya. fire() es idempotente.
+    // Solo si de verdad hay algún frame pintable: con cero frames el
+    // poster estático es mejor que un canvas vacío.
     setTimeout(function () {
       if (stale()) return;
+      var any = false;
+      for (var k = 0; k < self.frames.length; k++) {
+        if (self.frames[k]) { any = true; break; }
+      }
+      if (!any) return;
       fire('first');
       fire('interactive');
       fire('complete');
@@ -435,6 +480,15 @@
       this.modeToggle.setAttribute('aria-checked', mode === 'light' ? 'true' : 'false');
     }
     try { window.localStorage.setItem('msi-color-mode', mode); } catch (e) {}
+
+    // El poster estático por defecto tiene fondo negro (secuencia oscura)
+    // o blanco (clara): al cambiar de tema hay que cambiarlo también o
+    // queda un rectángulo del color del tema anterior.
+    var poster = this.root.querySelector('[data-msi-poster]');
+    if (poster) {
+      var posterSrc = poster.getAttribute(mode === 'light' ? 'data-src-light' : 'data-src-dark');
+      if (posterSrc) poster.setAttribute('src', posterSrc);
+    }
 
     this.seq = SEQUENCES.filter(function (s) {
       return s.id === (mode === 'light' ? 'verde-blanco' : 'verde');
@@ -470,6 +524,11 @@
     this.preload({
       onFirst: function () {
         if (self.destroyed) return;
+        // Si el toggle llegó ANTES de que el preload inicial disparase su
+        // onFirst (quedó stale y muere sin bootear), este preload asume el
+        // arranque: sin esto el scrolly no se activaba nunca en móvil.
+        self.markScrollyReady();
+        self.resizeCanvas();
         repaint();
       },
       onInteractive: function () {
@@ -592,6 +651,9 @@
     this.dpr = Math.min(window.devicePixelRatio || 1, this.mobileLayout ? 1.5 : 2);
     var w = Math.round(canvas.offsetWidth * this.dpr);
     var h = Math.round(canvas.offsetHeight * this.dpr);
+    // Canvas oculto (display:none) u hoja de estilos sin aplicar: medir
+    // daría 0x0 y mataría el bitmap. Se re-medirá al ser visible.
+    if (!w || !h) return;
     // Guarda anti-thrash: iOS emite resize sin cambio real de tamaño.
     if (canvas.width === w && canvas.height === h) return;
     canvas.width = w;
@@ -639,6 +701,11 @@
   // patrón que el cambio de tema, sin tocar el modo de color).
   MsiLanding.prototype.reloadFrames = function () {
     var self = this;
+    // El cruce de breakpoint deja stale al preload anterior: sus hooks de
+    // hideLoader/swapping ya no dispararán. Reseteamos aquí o el loader
+    // se queda tapando la página (iPad rotado) y el toggle muere.
+    this.swapping = false;
+    if (this.loader) this.loader.hidden = true;
     this.frames = [];
     this.loadedCount = 0;
     this.current = 0;
@@ -677,6 +744,10 @@
     var want = Math.round(this.current);
     var have = this.lastDrawnSrc;
     if (have === want && this.frames[want]) return;
+    // Nada pintado aún y el que llega queda lejos del objetivo (p. ej. el
+    // último de la secuencia): mejor esperar con el poster que enseñar la
+    // pose final y dar un salto brusco cuando llegue el frame bueno.
+    if (have < 0 && !this.frames[want] && Math.abs(loadedIdx - want) > 12) return;
     if (have < 0 || Math.abs(loadedIdx - want) < Math.abs(have - want)) {
       this.drawFrame(want);
       this.lastDrawn = want;
@@ -768,18 +839,37 @@
     var canvas = this.canvas;
     var ctx = canvas.getContext('2d');
     if (!ctx) return;
-    var srcIdx = this.nearestLoaded(frameIndex);
-    if (srcIdx < 0) return;
-    var img = this.frames[srcIdx];
-    this.lastDrawnSrc = srcIdx;
+
+    // AUTOCURACIÓN (bug del primer viaje): si el bitmap no corresponde a
+    // la caja CSS actual — p. ej. se midió con la stylesheet aún sin
+    // aplicar (Safari en frío ejecuta el defer sin esperar al CSS), tras
+    // un prerender/bfcache sin evento resize, o quedó el 300x150
+    // intrínseco — redimensiona antes de pintar. resizeCanvas repinta él
+    // mismo; sin esta guarda el navegador estira el bitmap y el bote
+    // sale deforme hasta el siguiente resize real.
+    if (canvas.offsetWidth) {
+      var expW = Math.round(canvas.offsetWidth * (this.dpr || 1));
+      var expH = Math.round(canvas.offsetHeight * (this.dpr || 1));
+      if (canvas.width !== expW || canvas.height !== expH) {
+        this.resizeCanvas();
+        return;
+      }
+    }
 
     var dpr = this.dpr || Math.min(window.devicePixelRatio || 1, 2);
     var W = canvas.width / dpr;
     var H = canvas.height / dpr;
 
+    // El fondo se pinta SIEMPRE: un canvas transparente/vacío es peor
+    // que un fondo plano si aún no hay ningún frame descargado.
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = this.bgColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    var srcIdx = this.nearestLoaded(frameIndex);
+    if (srcIdx < 0) return;
+    var img = this.frames[srcIdx];
+    this.lastDrawnSrc = srcIdx;
 
     var imgW = img.naturalWidth;
     var imgH = img.naturalHeight;
@@ -933,6 +1023,8 @@
     clearTimeout(this._resizeTimer);
     window.removeEventListener('scroll', this.onScroll);
     window.removeEventListener('resize', this.onResize);
+    window.removeEventListener('pageshow', this.onResize);
+    document.removeEventListener('visibilitychange', this.onVisible);
     if (this.promoObserver) {
       this.promoObserver.disconnect();
       this.promoObserver = null;

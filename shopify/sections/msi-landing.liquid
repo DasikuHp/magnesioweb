@@ -37,6 +37,19 @@
     assign frames_v_light = vb_probe | split: '?v=' | last
   endif
 
+  # Busters de las variantes móviles -m (mismo mecanismo): si se
+  # re-suben con otra geometría, el navegador no sirve las rancias.
+  assign vm_dark_probe = 'verde-frame-m_0001.webp' | asset_url
+  assign frames_v_m_dark = ''
+  if vm_dark_probe contains '?v='
+    assign frames_v_m_dark = vm_dark_probe | split: '?v=' | last
+  endif
+  assign vm_light_probe = 'verde-blanco-frame-m_0001.webp' | asset_url
+  assign frames_v_m_light = ''
+  if vm_light_probe contains '?v='
+    assign frames_v_m_light = vm_light_probe | split: '?v=' | last
+  endif
+
   # — Producto 1: Magnesio con Vitamina C (naranja) —
   assign p1_obj = all_products[section.settings.product_1]
   assign p1_price = section.settings.product_1_price
@@ -112,6 +125,8 @@
   data-color-mode="{{ section.settings.color_mode | default: 'dark' }}"
   data-frames-base="{{ frames_base }}"
   data-frames-v-light="{{ frames_v_light }}"
+  data-frames-v-m-dark="{{ frames_v_m_dark }}"
+  data-frames-v-m-light="{{ frames_v_m_light }}"
   data-frame-prefix="{{ section.settings.frames_prefix | default: 'frame_' }}"
   data-frame-ext=".webp"
   data-frame-count="121"
@@ -185,7 +200,10 @@
   {%- comment -%} ===== HERO SCROLLYTELLING (500vh + canvas sticky) ===== {%- endcomment -%}
   <div class="msi-hero" data-msi-hero>
     <div class="msi-hero-sticky">
-      <canvas class="msi-hero-canvas" data-msi-canvas></canvas>
+      {%- comment -%} width/height verticales de cinturón: si el JS pinta
+           antes de poder medir la caja CSS, el estirado es mínimo (el
+           intrínseco 300x150 deformaba el bote 4x). JS los reajusta. {%- endcomment -%}
+      <canvas class="msi-hero-canvas" data-msi-canvas width="585" height="990"></canvas>
       <div class="msi-aurora msi-aurora--hero" aria-hidden="true"></div>
       <div class="msi-hero-vignette"></div>
       <div class="msi-hero-noise"></div>
@@ -230,7 +248,10 @@
         <div class="msi-hero-hint-line"></div>
       </div>
 
-      {%- comment -%} Fallback móvil: imagen estática, sin canvas ni precarga {%- endcomment -%}
+      {%- comment -%} Fallback móvil: imagen estática, sin canvas ni precarga.
+           Por defecto el poster ES el primer frame de la secuencia móvil
+           activa (mismo archivo, misma caché): el swap poster→canvas es
+           invisible y no aparece un producto distinto durante la carga. {%- endcomment -%}
       <div class="msi-hero-mobile">
         <div class="msi-hero-mobile-img">
           {%- if section.settings.mobile_image -%}
@@ -238,7 +259,24 @@
           {%- elsif section.settings.product_1_image -%}
             {{ section.settings.product_1_image | image_url: width: 900 | image_tag: loading: 'eager', alt: section.settings.beat_a_tag }}
           {%- else -%}
-            <img src="{{ 'hero-mobile.webp' | asset_url }}" alt="{{ section.settings.beat_a_tag }}" width="369" height="675" loading="eager">
+            {%- liquid
+              assign poster_dark = 'verde-frame-m_0001.webp' | asset_url
+              assign poster_light = 'verde-blanco-frame-m_0001.webp' | asset_url
+              if section.settings.color_mode == 'light'
+                assign poster_src = poster_light
+              else
+                assign poster_src = poster_dark
+              endif
+            -%}
+            <img
+              data-msi-poster
+              src="{{ poster_src }}"
+              data-src-dark="{{ poster_dark }}"
+              data-src-light="{{ poster_light }}"
+              alt="{{ section.settings.beat_a_tag }}"
+              width="640" height="1282"
+              loading="eager" fetchpriority="high"
+            >
           {%- endif -%}
         </div>
         <span class="msi-beat-tag">{{ section.settings.beat_a_tag }}</span>
@@ -254,6 +292,28 @@
       </div>
     </div>
   </div>
+
+  {%- comment -%} Anti-FOUC: la elección claro/oscuro del visitante
+       (localStorage) se aplica ANTES del primer paint. Sin esto, quien
+       eligió modo claro veía un fogonazo negro en cada visita hasta que
+       corría el JS diferido. Inline y mínimo a propósito. {%- endcomment -%}
+  <script>
+    (function () {
+      try {
+        var m = window.localStorage.getItem('msi-color-mode');
+        if (m !== 'light' && m !== 'dark') return;
+        var root = document.currentScript.closest('[data-msi-landing]');
+        if (!root) return;
+        root.classList.toggle('msi-landing--light', m === 'light');
+        root.setAttribute('data-color-mode', m);
+        var p = root.querySelector('[data-msi-poster]');
+        if (p) {
+          var s = p.getAttribute(m === 'light' ? 'data-src-light' : 'data-src-dark');
+          if (s) p.setAttribute('src', s);
+        }
+      } catch (e) { /* localStorage bloqueado: se queda el modo del editor */ }
+    })();
+  </script>
 
   {%- comment -%} ===== PRODUCTOS ===== {%- endcomment -%}
   <section id="productos" class="msi-section msi-products">

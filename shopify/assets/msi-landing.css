@@ -493,15 +493,16 @@
 }
 
 /* ---------- Hero en móvil ----------
-   Dos modos, gobernados por la clase .is-scrolly que pone el JS:
-   - CON .is-scrolly (móvil normal): scrollytelling real. El canvas
-     dibuja el bote anclado abajo y los beats viven en la franja
-     superior con su propio scrim — texto y producto nunca se pisan.
-   - SIN .is-scrolly (reduced-motion, kill-switch del editor, JS caído
-     o el instante antes de que el JS arranque): fallback estático en
-     DOS BANDAS APILADAS — imagen arriba (banda flexible), texto abajo
-     sobre el fondo de la página. Sin overlays: la colisión es
-     estructuralmente imposible, también durante el FOUC de carga. */
+   Gobernado por DOS clases que pone el JS:
+   - .is-scrolly (al arrancar en móvil): reserva ya el alto de 300vh del
+     scrollytelling para que el layout no salte cuando llegue el frame 0.
+   - .is-canvas-ready (cuando el canvas tiene su primer frame pintado):
+     retira el poster estático y muestra canvas + beats + hint.
+   SIN .is-canvas-ready (carga, reduced-motion, kill-switch del editor o
+   JS caído): fallback estático en DOS BANDAS APILADAS — imagen arriba
+   (banda flexible), texto abajo sobre el fondo de la página. Sin
+   overlays: la colisión es estructuralmente imposible, también durante
+   el FOUC de carga. */
 .msi-hero-mobile {
   display: none;
 }
@@ -515,13 +516,14 @@
     height: 100svh;
     min-height: 560px;
   }
-  .msi-landing:not(.is-scrolly) .msi-hero-canvas,
-  .msi-landing:not(.is-scrolly) .msi-beat,
-  .msi-landing:not(.is-scrolly) .msi-hero-hint,
-  .msi-landing:not(.is-scrolly) .msi-loader {
+  .msi-landing:not(.is-canvas-ready) .msi-hero-canvas,
+  .msi-landing:not(.is-canvas-ready) .msi-beat,
+  .msi-landing:not(.is-canvas-ready) .msi-hero-hint,
+  .msi-landing:not(.is-scrolly) .msi-loader,
+  .msi-landing.is-scrolly .msi-loader {
     display: none;
   }
-  .msi-landing:not(.is-scrolly) .msi-hero-mobile {
+  .msi-landing:not(.is-canvas-ready) .msi-hero-mobile {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -531,7 +533,7 @@
     padding: 0 1.5rem calc(2.5rem + env(safe-area-inset-bottom, 0px));
     z-index: 2;
   }
-  .msi-landing.is-scrolly .msi-hero-mobile {
+  .msi-landing.is-canvas-ready .msi-hero-mobile {
     display: none;
   }
 }
@@ -599,7 +601,7 @@
   }
   /* Scrim de la franja de texto: el canvas ancla el bote abajo, así
      que el 46% superior es zona de lectura garantizada */
-  .msi-landing.is-scrolly .msi-hero-sticky::before {
+  .msi-landing.is-canvas-ready .msi-hero-sticky::before {
     content: "";
     position: absolute;
     inset: 0 0 auto 0;
@@ -613,7 +615,7 @@
       rgba(5, 5, 5, 0) 100%
     );
   }
-  .msi-landing--light.is-scrolly .msi-hero-sticky::before {
+  .msi-landing--light.is-canvas-ready .msi-hero-sticky::before {
     background: linear-gradient(
       to bottom,
       rgba(250, 251, 252, 0.95) 0%,
