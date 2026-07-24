@@ -1,0 +1,146 @@
+{% comment %}
+  ============================================================
+  MSI Cart Drawer — pop-up lateral de carrito para la landing.
+
+  - Se renderiza con {% render 'msi-cart-drawer' %} al final de
+    sections/msi-landing.liquid.
+  - Progressive enhancement: sin JS los botones "Comprar" siguen
+    navegando por GET a /cart/add como hasta ahora. Con JS, el
+    click se intercepta y se convierte en POST /cart/add.js.
+  - Emite un JSON (#msi-drawer-data) con el catálogo leído en
+    vivo de all_products[handle]: precios, stock, variantes y el
+    packshot del tema (mismo mapeo que snippets/msi-shop-image).
+    El JS nunca hardcodea precios ni disponibilidad.
+  - Todo namespaced msi-drawer-* para no chocar con .msi-landing
+    ni con el tema Horizon.
+  ============================================================
+{% endcomment %}
+
+{{ 'msi-cart-drawer.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'msi-cart-drawer.js' | asset_url }}" defer></script>
+
+{%- liquid
+  assign msi_drawer_handles = 'magnesio-con-vitamina-c,magnesio-con-colageno,aceite-de-magnesio,pack-4-unidades,pack-6-unidades' | split: ','
+  assign msi_drawer_base = all_products['magnesio-con-vitamina-c']
+  assign msi_drawer_pack6 = all_products['pack-6-unidades']
+-%}
+
+{%- capture msi_drawer_products_json -%}
+  {%- assign msi_drawer_sep = '' -%}
+  {%- for msi_drawer_handle in msi_drawer_handles -%}
+    {%- assign msi_drawer_p = all_products[msi_drawer_handle] -%}
+    {%- if msi_drawer_p == blank -%}{%- continue -%}{%- endif -%}
+    {%- liquid
+      # Packshot del tema (decisión de marca) — mismo mapeo que msi-shop-image.
+      assign msi_drawer_img = ''
+      assign msi_drawer_units = 1
+      case msi_drawer_handle
+        when 'magnesio-con-vitamina-c'
+          assign msi_drawer_img = 'producto-1-hero.webp'
+        when 'magnesio-con-colageno'
+          assign msi_drawer_img = 'producto-2-hero.webp'
+        when 'aceite-de-magnesio'
+          assign msi_drawer_img = 'producto-3-hero.webp'
+        when 'pack-4-unidades'
+          assign msi_drawer_img = 'pack-4.webp'
+          assign msi_drawer_units = 4
+        when 'pack-6-unidades'
+          assign msi_drawer_img = 'pack-6.webp'
+          assign msi_drawer_units = 6
+      endcase
+
+      # Ahorro real del pack calculado en vivo: (unidades × precio unidad) − precio pack.
+      assign msi_drawer_savings = 0
+      if msi_drawer_units > 1 and msi_drawer_base != blank
+        assign msi_drawer_full = msi_drawer_base.price | times: msi_drawer_units
+        if msi_drawer_full > msi_drawer_p.price
+          assign msi_drawer_savings = msi_drawer_full | minus: msi_drawer_p.price
+        endif
+      endif
+    -%}
+    {{ msi_drawer_sep }}{"handle":{{ msi_drawer_handle | json }},"title":{{ msi_drawer_p.title | json }},"variantId":{{ msi_drawer_p.selected_or_first_available_variant.id | json }},"price":{{ msi_drawer_p.price | json }},"priceFormatted":{{ msi_drawer_p.price | money | json }},"available":{{ msi_drawer_p.available | json }},"imgSrc":{% if msi_drawer_img != blank %}{{ msi_drawer_img | asset_url | json }}{% elsif msi_drawer_p.featured_image %}{{ msi_drawer_p.featured_image | image_url: width: 360 | json }}{% else %}null{% endif %},"url":{{ msi_drawer_p.url | json }},"units":{{ msi_drawer_units }},"savings":{{ msi_drawer_savings }},"savingsFormatted":{% if msi_drawer_savings > 0 %}{{ msi_drawer_savings | money | json }}{% else %}null{% endif %},"freeShipping":{% if msi_drawer_handle == 'pack-6-unidades' %}true{% else %}false{% endif %}}
+    {%- assign msi_drawer_sep = ',' -%}
+  {%- endfor -%}
+{%- endcapture -%}
+
+<script type="application/json" id="msi-drawer-data">
+{
+  "moneyFormat": {{ shop.money_format | json }},
+  "cartCount": {{ cart.item_count | default: 0 }},
+  "endpoints": {
+    "cart": {{ routes.cart_url | json }},
+    "add": {{ routes.cart_add_url | json }},
+    "change": {{ routes.cart_change_url | json }}
+  },
+  "freeShipping": {
+    "handle": "pack-6-unidades",
+    "available": {% if msi_drawer_pack6 != blank and msi_drawer_pack6.available %}true{% else %}false{% endif %},
+    "threshold": {% if msi_drawer_pack6 != blank %}{{ msi_drawer_pack6.price }}{% else %}0{% endif %}
+  },
+  "products": [{{ msi_drawer_products_json }}]
+}
+</script>
+
+<div class="msi-drawer-root" data-msi-drawer-root hidden>
+  <div class="msi-drawer-overlay" data-msi-drawer-overlay aria-hidden="true"></div>
+
+  <aside class="msi-drawer" data-msi-drawer role="dialog" aria-modal="true" aria-label="Carrito">
+    <header class="msi-drawer-head">
+      <h2 class="msi-drawer-title">
+        Tu carrito
+        <span class="msi-drawer-count" data-msi-drawer-count aria-live="polite">(0)</span>
+      </h2>
+      <button
+        type="button"
+        class="msi-drawer-close"
+        data-msi-drawer-close
+        data-msi-drawer-action="close"
+        aria-label="Cerrar carrito"
+      >
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true">
+          <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </header>
+
+    <div class="msi-drawer-error" data-msi-drawer-error role="alert" hidden></div>
+
+    <div class="msi-drawer-shipbar" data-msi-drawer-shipbar hidden>
+      <p class="msi-drawer-shipbar-label" data-msi-drawer-shipbar-label></p>
+      <div
+        class="msi-drawer-shipbar-track"
+        data-msi-drawer-shipbar-track
+        role="progressbar"
+        aria-label="Progreso hacia portes gratis"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+      >
+        <div class="msi-drawer-shipbar-fill" data-msi-drawer-shipbar-fill></div>
+      </div>
+    </div>
+
+    <div class="msi-drawer-body">
+      <p class="msi-drawer-empty" data-msi-drawer-empty hidden>
+        Tu carrito está vacío. Elige tu magnesio y empieza hoy.
+      </p>
+      <ul class="msi-drawer-items" data-msi-drawer-items></ul>
+
+      <section class="msi-drawer-upsell" data-msi-drawer-upsell aria-label="Completa tu pack" hidden>
+        <h3 class="msi-drawer-upsell-title">Completa tu pack</h3>
+        <div class="msi-drawer-upsell-list" data-msi-drawer-upsell-list></div>
+      </section>
+    </div>
+
+    <footer class="msi-drawer-foot">
+      <div class="msi-drawer-subtotal">
+        <span class="msi-drawer-subtotal-label">Subtotal</span>
+        <strong class="msi-drawer-subtotal-value" data-msi-drawer-subtotal aria-live="polite">—</strong>
+      </div>
+      <p class="msi-drawer-note">Impuestos incluidos · Envío calculado en el pago</p>
+      <a href="/checkout" class="msi-drawer-checkout" data-msi-drawer-checkout>Finalizar compra →</a>
+      <a href="{{ routes.cart_url }}" class="msi-drawer-viewcart">Ver carrito</a>
+      <button type="button" class="msi-drawer-continue" data-msi-drawer-action="close">Seguir comprando</button>
+    </footer>
+  </aside>
+</div>

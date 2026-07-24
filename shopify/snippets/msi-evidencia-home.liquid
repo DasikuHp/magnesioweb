@@ -1,0 +1,217 @@
+{% comment %}
+  ============================================================
+  MSI Evidencia (home) — SNIPPET público para la landing.
+  ARCHIVO NUEVO, aditivo. Se renderiza dentro de sections/msi-landing.liquid
+  (tras "Nosotros", antes del newsletter) con {% render 'msi-evidencia-home' %}.
+  Estética del landing, theme-aware (.msi-landing--light). Breve explicación
+  E-E-A-T + el INFORME original con lectura integrada (lightbox con zoom,
+  bordes desenfocados, pan/pinch) — patrón verificado de msi-evidencia.
+
+  Línea legal (RD 1487/2009, Reg. 1924/2006 y 432/2012): divulgación
+  científica, NO claim de producto; estudio citado como hallazgo atribuido y
+  en pasado; solo declaraciones de salud autorizadas del magnesio.
+  ============================================================
+{% endcomment %}
+{%- liquid
+  assign ev_doc_src = 'msi-estudio-abstract.jpeg' | asset_url
+  assign ev_doc_cap = 'Abstract del estudio presentado al Congreso de la Sociedad Española de Nefrología (2019). Servicio de Nefrología y Trasplante Renal, Hospital Clínic de Barcelona.'
+-%}
+
+<style>
+  .msi-evidence { position: relative; overflow: hidden; }
+  .msi-evidence-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: clamp(1.5rem, 4vw, 3.5rem); align-items: center; }
+  @media (max-width: 900px) { .msi-evidence-grid { grid-template-columns: 1fr; } }
+  .msi-evidence-lead { font-size: 1.02rem; line-height: 1.6; color: rgba(255,255,255,.74); margin: .2rem 0 1.1rem; }
+  .msi-evidence-stats { list-style: none; display: flex; flex-wrap: wrap; gap: .6rem 1.4rem; padding: 0; margin: 0 0 1.3rem; }
+  .msi-evidence-stats li { display: flex; flex-direction: column; }
+  .msi-evidence-stats b { font-size: 1.55rem; font-weight: 800; line-height: 1; color: var(--msi-green); }
+  .msi-evidence-stats span { font-size: .78rem; letter-spacing: .04em; color: rgba(255,255,255,.55); margin-top: .25rem; max-width: 16ch; }
+  .msi-evidence-actions { display: flex; flex-wrap: wrap; gap: .7rem 1rem; align-items: center; }
+  .msi-evidence-open { display: inline-flex; align-items: center; gap: .5rem; background: var(--msi-green); color: #08130a;
+    font-weight: 700; padding: .7rem 1.2rem; border: 0; border-radius: 999px; cursor: pointer; font-size: .95rem;
+    -webkit-tap-highlight-color: transparent; transition: transform .18s ease, filter .18s ease; }
+  .msi-evidence-open:hover { transform: translateY(-2px); filter: brightness(1.06); }
+  .msi-evidence-note { font-size: .76rem; color: rgba(255,255,255,.45); margin: 1.1rem 0 0; max-width: 52ch; }
+
+  .msi-evidence-doc { margin: 0; }
+  .msi-evidence-thumb { display: block; position: relative; width: 100%; padding: 0; border: 1px solid rgba(255,255,255,.1);
+    background: rgba(255,255,255,.04); border-radius: 1rem; overflow: hidden; cursor: zoom-in;
+    box-shadow: 0 20px 50px rgba(0,0,0,.4); transition: transform .2s ease, box-shadow .2s ease; -webkit-tap-highlight-color: transparent; }
+  .msi-evidence-thumb:hover { transform: translateY(-3px); box-shadow: 0 26px 64px rgba(0,0,0,.5); }
+  .msi-evidence-thumb:focus-visible { outline: 3px solid var(--msi-green); outline-offset: 3px; }
+  .msi-evidence-thumb img { display: block; width: 100%; height: auto; }
+  .msi-evidence-hint { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); white-space: nowrap;
+    background: rgba(8,19,10,.85); color: #fff; font-size: .82rem; font-weight: 600; padding: 8px 15px; border-radius: 999px;
+    -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); pointer-events: none; }
+
+  /* Tema claro */
+  .msi-landing--light .msi-evidence-lead { color: #46554d; }
+  .msi-landing--light .msi-evidence-stats span { color: #7a8a80; }
+  .msi-landing--light .msi-evidence-note { color: #8a978e; }
+  .msi-landing--light .msi-evidence-thumb { border-color: #e0e7e2; background: #fff; box-shadow: 0 16px 44px rgba(22,32,26,.12); }
+
+  /* Lightbox de lectura */
+  .msi-evlb { position: fixed; inset: 0; z-index: 100000; display: none; align-items: center; justify-content: center;
+    padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); }
+  .msi-evlb.is-open { display: flex; }
+  .msi-evlb-backdrop { position: absolute; inset: 0; background: rgba(7,15,10,.62);
+    -webkit-backdrop-filter: blur(16px) saturate(1.05); backdrop-filter: blur(16px) saturate(1.05); }
+  .msi-evlb-frame { position: relative; z-index: 1; max-width: min(94vw, 900px); max-height: min(88svh, 88vh);
+    border-radius: 16px; overflow: hidden; touch-action: none; cursor: grab; background: #fff;
+    box-shadow: 0 40px 120px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.06);
+    -webkit-mask:
+      linear-gradient(to right, transparent 0, #000 3.2%, #000 96.8%, transparent 100%),
+      linear-gradient(to bottom, transparent 0, #000 2.6%, #000 97.4%, transparent 100%);
+    -webkit-mask-composite: source-in;
+            mask:
+      linear-gradient(to right, transparent 0, #000 3.2%, #000 96.8%, transparent 100%),
+      linear-gradient(to bottom, transparent 0, #000 2.6%, #000 97.4%, transparent 100%);
+            mask-composite: intersect; }
+  .msi-evlb-frame.is-panning { cursor: grabbing; }
+  .msi-evlb-img { display: block; max-width: 100%; max-height: 88vh; width: auto; height: auto; user-select: none;
+    -webkit-user-drag: none; transform-origin: center center; transition: transform .04s linear; will-change: transform; }
+  .msi-evlb-toolbar { position: absolute; z-index: 2; right: 14px; top: 14px; display: flex; gap: 8px; padding: 6px;
+    border-radius: 999px; background: rgba(10,20,14,.55); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .msi-evlb-toolbar button { width: 42px; height: 42px; border: 0; border-radius: 50%; cursor: pointer; font-size: 1.25rem;
+    line-height: 1; color: #fff; background: rgba(255,255,255,.12); display: grid; place-items: center; transition: background .15s ease;
+    -webkit-tap-highlight-color: transparent; }
+  .msi-evlb-toolbar button:hover { background: rgba(255,255,255,.26); }
+  .msi-evlb-toolbar button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .msi-evlb-caption { position: absolute; z-index: 2; left: 50%; bottom: 14px; transform: translateX(-50%); max-width: 90vw;
+    text-align: center; color: #eaf2ec; font-size: .82rem; font-weight: 500; padding: 8px 16px; border-radius: 999px;
+    background: rgba(10,20,14,.5); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); pointer-events: none; }
+  @media (max-width: 600px) { .msi-evlb-caption { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .msi-evlb-img, .msi-evidence-thumb, .msi-evidence-open { transition: none; } }
+</style>
+
+<section id="evidencia" class="msi-section msi-evidence">
+  <div class="msi-aurora" aria-hidden="true"></div>
+  <div class="msi-container msi-container--md">
+    <div class="msi-evidence-grid">
+      <div class="msi-evidence-copy">
+        <span class="msi-eyebrow">Evidencia científica</span>
+        <h2 class="msi-h2">Respaldo clínico: un estudio del Hospital Clínic de Barcelona</h2>
+        <p class="msi-evidence-lead">En 2019, un estudio observacional independiente presentado en el Congreso de la Sociedad Española de Nefrología describió la evolución del magnesio en sangre tras la suplementación con Magnesio Natural MSI en 37 pacientes. Es divulgación científica: describe un hallazgo del estudio, no una propiedad terapéutica del producto.</p>
+
+        <ul class="msi-evidence-stats">
+          <li><b>37</b><span>pacientes</span></li>
+          <li><b>12</b><span>meses de seguimiento</span></li>
+          <li><b>0</b><span>abandonos por efectos secundarios</span></li>
+        </ul>
+
+        <div class="msi-evidence-actions">
+          <button type="button" class="msi-evidence-open" data-msiev-open
+            data-msiev-src="{{ ev_doc_src }}"
+            data-msiev-caption="{{ ev_doc_cap | escape }}"
+            aria-label="Abrir el informe original del estudio con lectura y zoom">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg>
+            Leer el informe original
+          </button>
+        </div>
+
+        <p class="msi-evidence-note">Contenido de divulgación científica, no consejo médico. Las propiedades saludables del magnesio son las autorizadas por la UE (Reglamento 432/2012). Este producto no está destinado a prevenir, tratar ni curar ninguna enfermedad.</p>
+      </div>
+
+      <figure class="msi-evidence-doc">
+        <button type="button" class="msi-evidence-thumb" data-msiev-open
+          data-msiev-src="{{ ev_doc_src }}"
+          data-msiev-caption="{{ ev_doc_cap | escape }}"
+          aria-label="Ampliar el informe del estudio para leerlo con detalle y hacer zoom">
+          <img src="{{ ev_doc_src }}" alt="{{ ev_doc_cap | escape }}" width="997" height="1411" loading="lazy" decoding="async">
+          <span class="msi-evidence-hint" aria-hidden="true">🔍 Pulsa para leer y ampliar</span>
+        </button>
+      </figure>
+    </div>
+  </div>
+
+  {%- comment -%} Lightbox (una instancia) {%- endcomment -%}
+  <div class="msi-evlb" id="msiEvLb" role="dialog" aria-modal="true" aria-label="Informe del estudio (visor con zoom)">
+    <div class="msi-evlb-backdrop" data-msiev-close></div>
+    <div class="msi-evlb-frame" id="msiEvLbFrame">
+      <img class="msi-evlb-img" id="msiEvLbImg" alt="Informe original del estudio" width="997" height="1411" draggable="false">
+    </div>
+    <div class="msi-evlb-toolbar" role="group" aria-label="Controles de zoom">
+      <button type="button" data-msiev-zoom="out" aria-label="Alejar">−</button>
+      <button type="button" data-msiev-zoom="reset" aria-label="Restablecer zoom">⟲</button>
+      <button type="button" data-msiev-zoom="in" aria-label="Acercar">+</button>
+      <button type="button" data-msiev-close aria-label="Cerrar visor">✕</button>
+    </div>
+    <div class="msi-evlb-caption" id="msiEvLbCap" aria-hidden="true"></div>
+  </div>
+</section>
+
+<script>
+(function () {
+  var lb = document.getElementById('msiEvLb');
+  if (!lb || lb.dataset.evReady) return;
+  lb.dataset.evReady = '1';
+  var frame = document.getElementById('msiEvLbFrame');
+  var img = document.getElementById('msiEvLbImg');
+  var cap = document.getElementById('msiEvLbCap');
+  var MIN = 1, MAX = 6, scale = 1, tx = 0, ty = 0, lastTrigger = null;
+  var pointers = new Map(), pinchStartDist = 0, pinchStartScale = 1, panStart = null;
+
+  function apply() { img.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')'; }
+  function clampPan() {
+    var fr = frame.getBoundingClientRect();
+    var iw = img.offsetWidth * scale, ih = img.offsetHeight * scale;
+    var maxX = Math.max(0, (iw - fr.width) / 2 + 40), maxY = Math.max(0, (ih - fr.height) / 2 + 40);
+    tx = Math.min(maxX, Math.max(-maxX, tx)); ty = Math.min(maxY, Math.max(-maxY, ty));
+  }
+  function reset() { scale = 1; tx = 0; ty = 0; apply(); }
+  function zoomAt(cx, cy, factor) {
+    var prev = scale; scale = Math.min(MAX, Math.max(MIN, scale * factor)); if (scale === prev) return;
+    var fr = frame.getBoundingClientRect();
+    var px = cx - (fr.left + fr.width / 2), py = cy - (fr.top + fr.height / 2), ratio = scale / prev;
+    tx = (tx - px) * ratio + px; ty = (ty - py) * ratio + py;
+    if (scale === MIN) { tx = 0; ty = 0; } clampPan(); apply();
+  }
+  function open(src, caption, trigger) {
+    lastTrigger = trigger || null; img.src = src; cap.textContent = caption || ''; reset();
+    lb.classList.add('is-open'); document.documentElement.style.overflow = 'hidden';
+    var c = lb.querySelector('[data-msiev-close][aria-label="Cerrar visor"]'); if (c) c.focus();
+  }
+  function close() {
+    lb.classList.remove('is-open'); document.documentElement.style.overflow = '';
+    img.removeAttribute('src'); if (lastTrigger && lastTrigger.focus) lastTrigger.focus();
+  }
+  document.querySelectorAll('[data-msiev-open]').forEach(function (btn) {
+    btn.addEventListener('click', function () { open(btn.getAttribute('data-msiev-src'), btn.getAttribute('data-msiev-caption'), btn); });
+  });
+  lb.querySelectorAll('[data-msiev-close]').forEach(function (el) { el.addEventListener('click', close); });
+  document.addEventListener('keydown', function (e) {
+    if (!lb.classList.contains('is-open')) return;
+    if (e.key === 'Escape') close();
+    else if (e.key === '+' || e.key === '=') zoomAt(window.innerWidth / 2, window.innerHeight / 2, 1.3);
+    else if (e.key === '-' || e.key === '_') zoomAt(window.innerWidth / 2, window.innerHeight / 2, 1 / 1.3);
+  });
+  lb.querySelectorAll('[data-msiev-zoom]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var cx = window.innerWidth / 2, cy = window.innerHeight / 2, k = b.getAttribute('data-msiev-zoom');
+      if (k === 'in') zoomAt(cx, cy, 1.4); else if (k === 'out') zoomAt(cx, cy, 1 / 1.4); else reset();
+    });
+  });
+  frame.addEventListener('wheel', function (e) { e.preventDefault(); zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.12 : 1 / 1.12); }, { passive: false });
+  frame.addEventListener('dblclick', function (e) { e.preventDefault(); if (scale > 1.2) reset(); else zoomAt(e.clientX, e.clientY, 2.5); });
+  function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+  function mid(a, b) { return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
+  frame.addEventListener('pointerdown', function (e) {
+    frame.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 2) { var p = Array.from(pointers.values()); pinchStartDist = dist(p[0], p[1]); pinchStartScale = scale; panStart = null; }
+    else if (pointers.size === 1 && scale > 1) { panStart = { x: e.clientX - tx, y: e.clientY - ty }; frame.classList.add('is-panning'); }
+  });
+  frame.addEventListener('pointermove', function (e) {
+    if (!pointers.has(e.pointerId)) return; pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 2 && pinchStartDist > 0) {
+      var p = Array.from(pointers.values()), d = dist(p[0], p[1]), m = mid(p[0], p[1]);
+      zoomAt(m.x, m.y, (pinchStartScale * (d / pinchStartDist)) / scale);
+    } else if (pointers.size === 1 && panStart && scale > 1) { tx = e.clientX - panStart.x; ty = e.clientY - panStart.y; clampPan(); apply(); }
+  });
+  function endPointer(e) {
+    pointers.delete(e.pointerId); if (pointers.size < 2) pinchStartDist = 0;
+    if (pointers.size === 0) { panStart = null; frame.classList.remove('is-panning'); }
+  }
+  frame.addEventListener('pointerup', endPointer);
+  frame.addEventListener('pointercancel', endPointer);
+})();
+</script>

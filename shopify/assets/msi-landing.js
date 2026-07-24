@@ -180,13 +180,10 @@
     this.framesVLight = root.getAttribute('data-frames-v-light') || '';
     this.framesVmDark = root.getAttribute('data-frames-v-m-dark') || '';
     this.framesVmLight = root.getAttribute('data-frames-v-m-light') || '';
-    this.colorMode = root.getAttribute('data-color-mode') || 'dark';
-    // La elección del visitante (interruptor) manda sobre el ajuste
-    // del editor y sobrevive a la recarga.
-    try {
-      var stored = window.localStorage.getItem('msi-color-mode');
-      if (stored === 'light' || stored === 'dark') this.colorMode = stored;
-    } catch (e) { /* localStorage bloqueado (p. ej. navegación privada) */ }
+    // La página abre SIEMPRE en el modo del editor (blanco por defecto): NO
+    // se lee la elección previa del visitante. El interruptor cambia el modo
+    // solo en la sesión actual; al recargar vuelve al blanco por defecto.
+    this.colorMode = root.getAttribute('data-color-mode') || 'light';
     this.bgColor = this.colorMode === 'light' ? '#fafbfc' : '#000000';
     root.classList.toggle('msi-landing--light', this.colorMode === 'light');
     root.setAttribute('data-color-mode', this.colorMode);
@@ -233,9 +230,11 @@
       });
     }
 
-    // El vídeo promocional y los reveals funcionan también en estático.
+    // El vídeo promocional, los reveals y la oferta funcionan también en
+    // estático (sin canvas): son independientes del scrollytelling.
     this.initPromo();
     this.initReveals();
+    this.initOffer();
 
     if (!this.track || !this.canvas) return;
 
@@ -960,13 +959,59 @@
   MsiLanding.prototype.initPromo = function () {
     var section = this.root.querySelector('[data-msi-promo]');
     var video = this.root.querySelector('[data-msi-promo-video]');
+    var frame = section && section.querySelector('.msi-promo-frame');
+    var soundBtn = section && section.querySelector('[data-msi-promo-sound]');
     if (!section || !video) return;
 
     // Reduced motion: solo el póster; el CSS deja el overlay visible.
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
+    var unmuted = false;
+    var fadeToken = 0;
+
+    function fadeVolume(to, ms) {
+      var token = ++fadeToken;
+      var from = video.volume;
+      var start = null;
+      function step(ts) {
+        if (token !== fadeToken) return;
+        if (!start) start = ts;
+        var t = Math.min(1, (ts - start) / ms);
+        video.volume = from + (to - from) * t;
+        if (t < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    // Click/tap en cualquier punto del vídeo (ratón en escritorio, touch en
+    // móvil disparan el mismo evento "click") activa el sonido con una subida
+    // progresiva de volumen en vez de un salto brusco; un segundo click silencia.
+    function setSound(on) {
+      unmuted = on;
+      section.classList.toggle('is-unmuted', on);
+      if (soundBtn) soundBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      if (on) {
+        video.muted = false;
+        video.volume = 0;
+        var p = video.play();
+        if (p && p.catch) p.catch(function () {});
+        fadeVolume(1, 900);
+      } else {
+        fadeVolume(0, 250);
+        setTimeout(function () {
+          if (!unmuted) video.muted = true;
+        }, 260);
+      }
+    }
+
+    if (frame) {
+      frame.addEventListener('click', function () {
+        setSound(!unmuted);
+      });
+    }
+
     function tryPlay() {
-      video.muted = true; // garantiza el autoplay en todos los navegadores
+      if (!unmuted) video.muted = true; // garantiza el autoplay en todos los navegadores
       var p = video.play();
       if (p && p.catch) p.catch(function () { /* autoplay bloqueado: queda el póster */ });
     }
@@ -1015,12 +1060,121 @@
     }
   };
 
+  /* ---------- Oferta 24h + cuenta atrás + envío gratis ----------
+     El reloj vive POR VISITANTE en localStorage (la IP no es accesible desde
+     el navegador sin backend). El servidor solo decide si la oferta está
+     habilitada y pre-pinta la barra; aquí calculamos el tiempo restante real,
+     revelamos el "ENVÍO GRATIS" de los packs y gestionamos la caducidad. */
+
+  function pad2(n) {
+    return (n < 10 ? '0' : '') + n;
+  }
+
+  MsiLanding.prototype.initOffer = function () {
+    var root = this.root;
+    this.offerBar = root.querySelector('[data-msi-offer]');
+    this.offerTimerEl = root.querySelector('[data-msi-offer-timer]');
+    // Nodos "ENVÍO GRATIS" de los packs (ocultos por defecto): solo se
+    // muestran mientras la oferta esté activa; fuera de oferta el envío no
+    // es visible en la página (se calcula en el pago).
+    this.shipEls = Array.prototype.slice.call(root.querySelectorAll('[data-msi-ship]'));
+
+    var enabled = root.getAttribute('data-offer-enabled') === 'true';
+    if (!enabled) {
+      // Sin oferta: nada visible de envío en la página.
+      this.setOfferShipping(false);
+      return;
+    }
+
+    var hours = parseFloat(root.getAttribute('data-offer-hours'));
+    if (!isFinite(hours) || hours <= 0) hours = 24;
+    this.offerDurMs = hours * 3600 * 1000;
+    this.offerRepeat = root.getAttribute('data-offer-repeat') === 'true';
+    this.offerKey = 'msi-offer-deadline';
+
+    var now = Date.now();
+    var deadline = this.readOfferDeadline();
+
+    if (!deadline) {
+      deadline = now + this.offerDurMs;
+      this.writeOfferDeadline(deadline);
+    } else if (deadline <= now) {
+      // Caducada: reinicia (si procede) o cierra la oferta para este visitante.
+      if (this.offerRepeat) {
+        deadline = now + this.offerDurMs;
+        this.writeOfferDeadline(deadline);
+      } else {
+        this.endOffer();
+        return;
+      }
+    }
+    this.offerDeadline = deadline;
+
+    // Oferta activa: barra visible (ya pre-pintada por el servidor) + envío gratis.
+    this.setOfferShipping(true);
+    var self = this;
+    this.offerTick();
+    this.offerTimer = setInterval(function () { self.offerTick(); }, 1000);
+  };
+
+  MsiLanding.prototype.readOfferDeadline = function () {
+    try {
+      var v = parseInt(window.localStorage.getItem(this.offerKey), 10);
+      return isFinite(v) && v > 0 ? v : 0;
+    } catch (e) {
+      return 0; // localStorage bloqueado: la oferta corre en memoria esta sesión.
+    }
+  };
+
+  MsiLanding.prototype.writeOfferDeadline = function (ms) {
+    try { window.localStorage.setItem(this.offerKey, String(ms)); } catch (e) {}
+  };
+
+  MsiLanding.prototype.offerTick = function () {
+    var remaining = this.offerDeadline - Date.now();
+    if (remaining <= 0) {
+      if (this.offerRepeat) {
+        this.offerDeadline = Date.now() + this.offerDurMs;
+        this.writeOfferDeadline(this.offerDeadline);
+        remaining = this.offerDurMs;
+      } else {
+        this.endOffer();
+        return;
+      }
+    }
+    if (this.offerTimerEl) {
+      var totalSec = Math.floor(remaining / 1000);
+      var h = Math.floor(totalSec / 3600);
+      var m = Math.floor((totalSec % 3600) / 60);
+      var s = totalSec % 60;
+      this.offerTimerEl.textContent = pad2(h) + ':' + pad2(m) + ':' + pad2(s);
+    }
+  };
+
+  // Muestra u oculta el "ENVÍO GRATIS" de los packs y marca el estado en la raíz.
+  MsiLanding.prototype.setOfferShipping = function (on) {
+    this.root.classList.toggle('msi-offer-active', !!on);
+    for (var i = 0; i < this.shipEls.length; i++) {
+      this.shipEls[i].hidden = !on;
+    }
+  };
+
+  // Cierra la oferta: retira la barra, quita el envío gratis de la página y
+  // para el temporizador. El envío pasa a verse solo en el pago.
+  MsiLanding.prototype.endOffer = function () {
+    if (this.offerTimer) { clearInterval(this.offerTimer); this.offerTimer = 0; }
+    this.root.classList.remove('msi-has-offer');
+    this.setOfferShipping(false);
+    if (this.offerBar) this.offerBar.hidden = true;
+  };
+
   /* ---------- Limpieza (editor de temas) ---------- */
 
   MsiLanding.prototype.destroy = function () {
     this.destroyed = true;
     cancelAnimationFrame(this.raf);
     clearTimeout(this._resizeTimer);
+    if (this.offerTimer) { clearInterval(this.offerTimer); this.offerTimer = 0; }
     window.removeEventListener('scroll', this.onScroll);
     window.removeEventListener('resize', this.onResize);
     window.removeEventListener('pageshow', this.onResize);

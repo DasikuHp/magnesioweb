@@ -1,0 +1,50 @@
+{% comment %} Footer compacto de las páginas de compra MSI. {% endcomment %}
+<footer class="msi-shop-footer">
+  <div class="msi-shop-footer-links">
+    <a href="{{ routes.root_url }}">Inicio</a>
+    <a href="/#productos">Productos</a>
+    <a href="/#packs">Packs</a>
+    {%- if shop.privacy_policy.url != blank -%}<a href="{{ shop.privacy_policy.url }}">Privacidad</a>{%- endif -%}
+    {%- if shop.shipping_policy.url != blank -%}<a href="{{ shop.shipping_policy.url }}">Envíos</a>{%- endif -%}
+    {%- if shop.terms_of_service.url != blank -%}<a href="{{ shop.terms_of_service.url }}">Aviso legal</a>{%- endif -%}
+  </div>
+  <span>© {{ 'now' | date: '%Y' }} MSI Sport — magnesionatural.es · 🔒 Pago seguro · SSL</span>
+</footer>
+
+<script>
+  (function () {
+    'use strict';
+    /* Reveal de cards (patrón IntersectionObserver) */
+    var cards = document.querySelectorAll('[data-msi-reveal]');
+    if (!('IntersectionObserver' in window) ||
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      cards.forEach(function (c) { c.classList.add('is-in'); });
+    } else {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.15 });
+      cards.forEach(function (c) { io.observe(c); });
+    }
+    /* Controles de cantidad (+/-) */
+    document.querySelectorAll('[data-msi-qty]').forEach(function (box) {
+      var input = box.querySelector('input');
+      var form = box.closest('form');
+      var auto = box.hasAttribute('data-msi-qty-submit');
+      box.addEventListener('click', function (ev) {
+        var btn = ev.target.closest('button[data-step]');
+        if (!btn) return;
+        ev.preventDefault();
+        var min = parseInt(input.min || '0', 10);
+        var v = parseInt(input.value || '1', 10) + parseInt(btn.getAttribute('data-step'), 10);
+        if (v < min) v = min;
+        input.value = v;
+        if (auto && form) form.submit();
+      });
+      input.addEventListener('change', function () {
+        if (auto && form) form.submit();
+      });
+    });
+  })();
+</script>

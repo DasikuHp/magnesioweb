@@ -1,0 +1,527 @@
+{% comment %}
+  ============================================================
+  MSI Evidencia científica — página de aval clínico (E-E-A-T)
+  ARCHIVO NUEVO. No sustituye ni toca nada del tema existente.
+  Se usa desde templates/page.evidencia.json.
+
+  Diseñada para caminar la línea legal UE/España (RD 1487/2009,
+  Reglamentos 1924/2006 y 432/2012):
+   - Divulgación científica independiente, NO claim de producto.
+   - Cita al Dr./Hospital como AUTOR/FORO del estudio, nunca como
+     avalador del producto (art. 12.c prohíbe recomendación de
+     profesionales sanitarios individuales).
+   - Solo declaraciones de salud autorizadas del magnesio.
+   - Disclaimers obligatorios + voluntarios.
+  Todo el texto es editable desde el personalizador (settings/blocks).
+
+  Incluye visor del DOCUMENTO ORIGINAL del estudio (abstract firmado):
+  clic → lightbox de lectura con bordes desenfocados y zoom
+  (rueda/botones/pellizco/doble-toque + arrastre) en móvil y escritorio.
+  Todo self-contained (sin librerías, sin assets extra salvo la imagen).
+  ============================================================
+{% endcomment %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+
+<style>
+  .msi-evidencia-section { background:#ffffff; min-height:100vh; }
+  .msi-ev { --ev-accent: {{ section.settings.acento | default: '#7bc144' }}; --ev-ink:#16201a; --ev-muted:#5b6b63; --ev-line:#e4ebe6; --ev-bg:#ffffff; --ev-soft:#f4f8f5;
+    font-family:'Inter',system-ui,-apple-system,sans-serif; color:var(--ev-ink); background:var(--ev-bg);
+    max-width:820px; margin:0 auto; padding:32px 20px 80px; line-height:1.65; }
+  .msi-ev h1 { font-size:clamp(1.7rem,4vw,2.5rem); font-weight:800; line-height:1.15; letter-spacing:-.02em; margin:.2em 0 .5em; }
+  .msi-ev h2 { font-size:clamp(1.25rem,3vw,1.6rem); font-weight:700; margin:2.2em 0 .6em; letter-spacing:-.01em; }
+  .msi-ev h3 { font-size:1.05rem; font-weight:700; margin:1.4em 0 .4em; }
+  .msi-ev p { margin:.7em 0; }
+  .msi-ev a { color:#1f7a3a; text-decoration:underline; text-underline-offset:2px; }
+  .msi-ev .ev-trust { display:flex; flex-wrap:wrap; gap:8px 18px; font-size:.85rem; color:var(--ev-muted);
+    border-top:1px solid var(--ev-line); border-bottom:1px solid var(--ev-line); padding:14px 0; margin:.5em 0 1.6em; }
+  .msi-ev .ev-trust b { color:var(--ev-ink); font-weight:600; }
+  .msi-ev .ev-answer { background:var(--ev-soft); border-left:4px solid var(--ev-accent); border-radius:8px;
+    padding:18px 20px; font-size:1.06rem; }
+  .msi-ev .ev-answer p:first-child { margin-top:0; } .msi-ev .ev-answer p:last-child { margin-bottom:0; }
+  .msi-ev .ev-card { border:1px solid var(--ev-line); border-radius:12px; overflow:hidden; margin:1em 0; }
+  .msi-ev .ev-card table { width:100%; border-collapse:collapse; }
+  .msi-ev .ev-card th, .msi-ev .ev-card td { text-align:left; padding:11px 16px; font-size:.94rem; border-bottom:1px solid var(--ev-line); vertical-align:top; }
+  .msi-ev .ev-card th { width:38%; color:var(--ev-muted); font-weight:600; background:var(--ev-soft); }
+  .msi-ev .ev-card tr:last-child th, .msi-ev .ev-card tr:last-child td { border-bottom:0; }
+  .msi-ev .ev-note { border:1px solid #f0d9a8; background:#fdf7e9; border-radius:10px; padding:14px 18px; margin:1.2em 0; font-size:.95rem; }
+  .msi-ev .ev-note.warn { border-color:#e9c3c3; background:#fbeeee; }
+  .msi-ev .ev-note b { display:block; margin-bottom:.2em; }
+  .msi-ev details { border-bottom:1px solid var(--ev-line); padding:6px 0; }
+  .msi-ev summary { cursor:pointer; font-weight:600; padding:12px 0; list-style:none; }
+  .msi-ev summary::-webkit-details-marker { display:none; }
+  .msi-ev summary::after { content:'+'; float:right; color:var(--ev-accent); font-weight:800; }
+  .msi-ev details[open] summary::after { content:'–'; }
+  .msi-ev ol.ev-refs { font-size:.88rem; color:var(--ev-muted); padding-left:1.2em; }
+  .msi-ev ol.ev-refs li { margin:.4em 0; }
+  .msi-ev .ev-legal { margin-top:2.5em; padding-top:1.2em; border-top:1px solid var(--ev-line); font-size:.82rem; color:var(--ev-muted); }
+  .msi-ev .ev-cta { display:inline-block; margin-top:1em; background:var(--ev-accent); color:#08130a; font-weight:700;
+    padding:12px 22px; border-radius:999px; text-decoration:none; }
+
+  /* ---- Documento original: miniatura clicable ---- */
+  .msi-ev .ev-doc { margin:1.4em 0 .4em; text-align:center; }
+  .msi-ev .ev-doc-thumb { display:inline-block; position:relative; padding:0; border:1px solid var(--ev-line);
+    background:var(--ev-soft); border-radius:12px; cursor:zoom-in; max-width:min(420px,92%); overflow:hidden;
+    box-shadow:0 8px 24px rgba(22,32,26,.10); transition:transform .18s ease, box-shadow .18s ease; -webkit-tap-highlight-color:transparent; }
+  .msi-ev .ev-doc-thumb:hover { transform:translateY(-2px); box-shadow:0 14px 34px rgba(22,32,26,.16); }
+  .msi-ev .ev-doc-thumb:focus-visible { outline:3px solid var(--ev-accent); outline-offset:2px; }
+  .msi-ev .ev-doc-thumb img { display:block; width:100%; height:auto; }
+  .msi-ev .ev-doc-hint { position:absolute; left:50%; bottom:12px; transform:translateX(-50%);
+    background:rgba(8,19,10,.82); color:#fff; font-size:.8rem; font-weight:600; padding:7px 14px; border-radius:999px;
+    white-space:nowrap; backdrop-filter:blur(4px); pointer-events:none; }
+  .msi-ev .ev-doc figcaption { font-size:.82rem; color:var(--ev-muted); margin-top:.7em; }
+
+  /* ---- Lightbox de lectura: ventana con bordes desenfocados + zoom ---- */
+  .ev-lb { position:fixed; inset:0; z-index:99999; display:none; align-items:center; justify-content:center;
+    padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom)); }
+  .ev-lb.is-open { display:flex; }
+  .ev-lb-backdrop { position:absolute; inset:0; background:rgba(7,15,10,.60);
+    -webkit-backdrop-filter:blur(16px) saturate(1.05); backdrop-filter:blur(16px) saturate(1.05); }
+  /* La "ventana" con bordes que se difuminan hacia el fondo desenfocado */
+  .ev-lb-frame { position:relative; z-index:1; max-width:min(94vw,900px); max-height:min(88svh,88vh);
+    border-radius:16px; overflow:hidden; touch-action:none; cursor:grab;
+    background:#fff; box-shadow:0 40px 120px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.06);
+    -webkit-mask:
+      linear-gradient(to right, transparent 0, #000 3.2%, #000 96.8%, transparent 100%),
+      linear-gradient(to bottom, transparent 0, #000 2.6%, #000 97.4%, transparent 100%);
+    -webkit-mask-composite:source-in;
+            mask:
+      linear-gradient(to right, transparent 0, #000 3.2%, #000 96.8%, transparent 100%),
+      linear-gradient(to bottom, transparent 0, #000 2.6%, #000 97.4%, transparent 100%);
+            mask-composite:intersect; }
+  .ev-lb-frame.is-panning { cursor:grabbing; }
+  .ev-lb-img { display:block; max-width:100%; max-height:88vh; width:auto; height:auto; user-select:none;
+    -webkit-user-drag:none; transform-origin:center center; transition:transform .04s linear; will-change:transform; }
+  .ev-lb-toolbar { position:absolute; z-index:2; right:14px; top:14px; display:flex; gap:8px;
+    padding:6px; border-radius:999px; background:rgba(10,20,14,.55);
+    -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); }
+  .ev-lb-toolbar button { width:42px; height:42px; border:0; border-radius:50%; cursor:pointer;
+    font-size:1.25rem; line-height:1; color:#fff; background:rgba(255,255,255,.12); display:grid; place-items:center;
+    transition:background .15s ease; -webkit-tap-highlight-color:transparent; }
+  .ev-lb-toolbar button:hover { background:rgba(255,255,255,.26); }
+  .ev-lb-toolbar button:focus-visible { outline:2px solid #fff; outline-offset:2px; }
+  .ev-lb-caption { position:absolute; z-index:2; left:50%; bottom:14px; transform:translateX(-50%); max-width:90vw;
+    text-align:center; color:#eaf2ec; font-size:.82rem; font-weight:500; padding:8px 16px; border-radius:999px;
+    background:rgba(10,20,14,.5); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); pointer-events:none; }
+  @media (max-width:600px){ .ev-lb-caption { display:none; } }
+  @media (prefers-reduced-motion:reduce){ .ev-lb-img { transition:none; } .msi-ev .ev-doc-thumb { transition:none; } }
+</style>
+
+<article class="msi-ev">
+  {% render 'msi-breadcrumbs' %}
+
+  <h1>{{ section.settings.h1 | default: 'Evidencia científica del magnesio' | escape }}</h1>
+
+  {%- comment -%} Barra de confianza E-E-A-T {%- endcomment -%}
+  <div class="ev-trust">
+    {%- if section.settings.autor_nombre != blank -%}
+      <span>Redactado por <b>{{ section.settings.autor_nombre | escape }}</b>{% if section.settings.autor_titulo != blank %}, {{ section.settings.autor_titulo | escape }}{% endif %}</span>
+    {%- endif -%}
+    {%- if section.settings.revisor_nombre != blank -%}
+      <span>Revisado por
+        {%- if section.settings.revisor_perfil != blank %} <a href="{{ section.settings.revisor_perfil }}" rel="author"><b>{{ section.settings.revisor_nombre | escape }}</b></a>{% else %} <b>{{ section.settings.revisor_nombre | escape }}</b>{% endif -%}
+        {% if section.settings.revisor_titulo != blank %}, {{ section.settings.revisor_titulo | escape }}{% endif %}{% if section.settings.revisor_num != blank %} (col. nº {{ section.settings.revisor_num | escape }}){% endif %}</span>
+    {%- endif -%}
+    {%- if section.settings.fecha_revision != blank -%}<span>Última revisión: <b>{{ section.settings.fecha_revision | escape }}</b></span>{%- endif -%}
+  </div>
+
+  {%- comment -%} Respuesta directa citable (legal) {%- endcomment -%}
+  <div class="ev-answer">{{ section.settings.respuesta_directa }}</div>
+
+  {%- comment -%} 1) Qué dice la ciencia del magnesio (claims EFSA autorizados) {%- endcomment -%}
+  {%- if section.settings.ciencia_titulo != blank -%}<h2>{{ section.settings.ciencia_titulo | escape }}</h2>{%- endif -%}
+  {{ section.settings.ciencia_texto }}
+
+  {%- comment -%} 2) El estudio en cifras (ficha estructurada, atribuida y en pasado) {%- endcomment -%}
+  <h2>{{ section.settings.estudio_titulo | default: 'El estudio, en cifras' | escape }}</h2>
+  {{ section.settings.estudio_intro }}
+  <div class="ev-card"><table>
+    {%- if section.settings.e_diseno != blank -%}<tr><th>Diseño</th><td>{{ section.settings.e_diseno | escape }}</td></tr>{%- endif -%}
+    {%- if section.settings.e_n != blank -%}<tr><th>Participantes</th><td>{{ section.settings.e_n | escape }}</td></tr>{%- endif -%}
+    {%- if section.settings.e_poblacion != blank -%}<tr><th>Población</th><td>{{ section.settings.e_poblacion | escape }}</td></tr>{%- endif -%}
+    {%- if section.settings.e_intervencion != blank -%}<tr><th>Intervención</th><td>{{ section.settings.e_intervencion | escape }}</td></tr>{%- endif -%}
+    {%- if section.settings.e_duracion != blank -%}<tr><th>Duración</th><td>{{ section.settings.e_duracion | escape }}</td></tr>{%- endif -%}
+    {%- if section.settings.e_resultado != blank -%}<tr><th>Resultado observado</th><td>{{ section.settings.e_resultado | escape }}</td></tr>{%- endif -%}
+    {%- if section.settings.e_seguridad != blank -%}<tr><th>Tolerancia / seguridad</th><td>{{ section.settings.e_seguridad | escape }}</td></tr>{%- endif -%}
+    {%- if section.settings.e_autor != blank -%}<tr><th>Autor</th><td>{{ section.settings.e_autor | escape }}</td></tr>{%- endif -%}
+    {%- if section.settings.e_foro != blank -%}<tr><th>Presentado en</th><td>{{ section.settings.e_foro | escape }}</td></tr>{%- endif -%}
+  </table></div>
+  {%- if section.settings.e_url != blank -%}<p><a href="{{ section.settings.e_url }}" rel="nofollow" target="_blank">Consultar la referencia del estudio →</a></p>{%- endif -%}
+
+  {%- comment -%} 2b) Documento original del estudio (prueba documental, visor con zoom) {%- endcomment -%}
+  {%- liquid
+    assign doc_src = ''
+    assign doc_w = 997
+    assign doc_h = 1411
+    if section.settings.doc_imagen != blank
+      assign doc_src = section.settings.doc_imagen | image_url: width: 1600
+      assign doc_w = section.settings.doc_imagen.width
+      assign doc_h = section.settings.doc_imagen.height
+    elsif section.settings.doc_asset != blank
+      assign doc_src = section.settings.doc_asset | asset_url
+    endif
+  -%}
+  {%- if doc_src != blank -%}
+    {%- if section.settings.doc_titulo != blank -%}<h3>{{ section.settings.doc_titulo | escape }}</h3>{%- endif -%}
+    <figure class="ev-doc">
+      <button type="button" class="ev-doc-thumb" data-ev-open
+        data-ev-src="{{ doc_src }}"
+        data-ev-caption="{{ section.settings.doc_caption | escape }}"
+        aria-label="Ampliar el documento del estudio para leerlo con detalle y hacer zoom">
+        <img src="{{ doc_src }}" alt="{{ section.settings.doc_caption | default: 'Documento original del estudio' | escape }}" width="{{ doc_w }}" height="{{ doc_h }}" loading="lazy" decoding="async">
+        <span class="ev-doc-hint" aria-hidden="true">🔍 Pulsa para leer y ampliar</span>
+      </button>
+      {%- if section.settings.doc_caption != blank -%}<figcaption>{{ section.settings.doc_caption | escape }}</figcaption>{%- endif -%}
+    </figure>
+  {%- endif -%}
+
+  {%- comment -%} 3) Qué NO significa este estudio (honestidad = E-E-A-T + blindaje legal) {%- endcomment -%}
+  <div class="ev-note">
+    <b>Qué NO significa este estudio</b>
+    {{ section.settings.que_no_significa }}
+  </div>
+
+  {%- comment -%} 4) Origen y calidad del producto (aquí sí se puede hablar del producto) {%- endcomment -%}
+  {%- if section.settings.origen_titulo != blank -%}<h2>{{ section.settings.origen_titulo | escape }}</h2>{%- endif -%}
+  {{ section.settings.origen_texto }}
+
+  {%- comment -%} 5) FAQ (bloques) + schema FAQPage {%- endcomment -%}
+  {%- assign faqs = section.blocks | where: 'type', 'faq' -%}
+  {%- if faqs.size > 0 -%}
+    <h2>{{ section.settings.faq_titulo | default: 'Preguntas frecuentes' | escape }}</h2>
+    {%- for b in faqs -%}
+      <details {{ b.shopify_attributes }}{% if forloop.first %} open{% endif %}>
+        <summary>{{ b.settings.pregunta | escape }}</summary>
+        <div class="rte">{{ b.settings.respuesta }}</div>
+      </details>
+    {%- endfor -%}
+  {%- endif -%}
+
+  {%- comment -%} 6) Referencias (bloques cita) {%- endcomment -%}
+  {%- assign refs = section.blocks | where: 'type', 'cita' -%}
+  {%- if refs.size > 0 -%}
+    <h2>{{ section.settings.refs_titulo | default: 'Referencias' | escape }}</h2>
+    <ol class="ev-refs">
+      {%- for b in refs -%}
+        <li id="ref-{{ forloop.index }}">
+          {{ b.settings.texto | escape }}
+          {%- if b.settings.url != blank %} <a href="{{ b.settings.url }}" rel="nofollow" target="_blank">{{ b.settings.fuente | default: 'Fuente' | escape }}</a>{% elsif b.settings.fuente != blank %} — {{ b.settings.fuente | escape }}{% endif -%}
+        </li>
+      {%- endfor -%}
+    </ol>
+  {%- endif -%}
+
+  {%- if section.settings.cta_texto != blank and section.settings.cta_url != blank -%}
+    <p><a class="ev-cta" href="{{ section.settings.cta_url }}">{{ section.settings.cta_texto | escape }}</a></p>
+  {%- endif -%}
+
+  {%- comment -%} Disclaimers legales {%- endcomment -%}
+  <div class="ev-legal">{{ section.settings.disclaimers }}</div>
+</article>
+
+{%- comment -%} ===================== Lightbox de lectura (una sola instancia) ===================== {%- endcomment -%}
+<div class="ev-lb" id="evLb" role="dialog" aria-modal="true" aria-label="Documento del estudio (visor con zoom)">
+  <div class="ev-lb-backdrop" data-ev-close></div>
+  <div class="ev-lb-frame" id="evLbFrame">
+    <img class="ev-lb-img" id="evLbImg" alt="Documento original del estudio" width="{{ doc_w | default: 997 }}" height="{{ doc_h | default: 1411 }}" draggable="false">
+  </div>
+  <div class="ev-lb-toolbar" role="group" aria-label="Controles de zoom">
+    <button type="button" data-ev-zoom="out" aria-label="Alejar">−</button>
+    <button type="button" data-ev-zoom="reset" aria-label="Restablecer zoom">⟲</button>
+    <button type="button" data-ev-zoom="in" aria-label="Acercar">+</button>
+    <button type="button" data-ev-close aria-label="Cerrar visor">✕</button>
+  </div>
+  <div class="ev-lb-caption" id="evLbCap" aria-hidden="true"></div>
+</div>
+
+<script>
+(function () {
+  var lb    = document.getElementById('evLb');
+  if (!lb || lb.dataset.evReady) return;      // idempotente si la sección se renderiza dos veces
+  lb.dataset.evReady = '1';
+  var frame = document.getElementById('evLbFrame');
+  var img   = document.getElementById('evLbImg');
+  var cap   = document.getElementById('evLbCap');
+
+  var MIN = 1, MAX = 6;
+  var scale = 1, tx = 0, ty = 0;              // transform state
+  var lastTrigger = null;
+  var pointers = new Map();                    // pointerId -> {x,y}
+  var pinchStartDist = 0, pinchStartScale = 1, pinchMid = {x:0,y:0};
+  var panStart = null;
+
+  function apply() {
+    img.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')';
+  }
+  function clampPan() {
+    // mantener la imagen dentro de un margen razonable del marco
+    var fr = frame.getBoundingClientRect();
+    var iw = img.offsetWidth * scale, ih = img.offsetHeight * scale;
+    var maxX = Math.max(0, (iw - fr.width) / 2 + 40);
+    var maxY = Math.max(0, (ih - fr.height) / 2 + 40);
+    tx = Math.min(maxX, Math.max(-maxX, tx));
+    ty = Math.min(maxY, Math.max(-maxY, ty));
+  }
+  function reset() { scale = 1; tx = 0; ty = 0; apply(); }
+
+  // Zoom alrededor de un punto (cx,cy en coords de viewport)
+  function zoomAt(cx, cy, factor) {
+    var prev = scale;
+    scale = Math.min(MAX, Math.max(MIN, scale * factor));
+    if (scale === prev) return;
+    var fr = frame.getBoundingClientRect();
+    // punto relativo al centro del marco
+    var px = cx - (fr.left + fr.width / 2);
+    var py = cy - (fr.top + fr.height / 2);
+    var ratio = scale / prev;
+    tx = (tx - px) * ratio + px;
+    ty = (ty - py) * ratio + py;
+    if (scale === MIN) { tx = 0; ty = 0; }
+    clampPan(); apply();
+  }
+
+  function open(src, caption, trigger) {
+    lastTrigger = trigger || null;
+    img.src = src;
+    cap.textContent = caption || '';
+    reset();
+    lb.classList.add('is-open');
+    document.documentElement.style.overflow = 'hidden';
+    var closeBtn = lb.querySelector('[data-ev-close][aria-label="Cerrar visor"]');
+    if (closeBtn) closeBtn.focus();
+  }
+  function close() {
+    lb.classList.remove('is-open');
+    document.documentElement.style.overflow = '';
+    img.removeAttribute('src');
+    if (lastTrigger && typeof lastTrigger.focus === 'function') lastTrigger.focus();
+  }
+
+  // Abrir desde cualquier miniatura
+  document.querySelectorAll('[data-ev-open]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      open(btn.getAttribute('data-ev-src'), btn.getAttribute('data-ev-caption'), btn);
+    });
+  });
+
+  // Cerrar (backdrop, botón, ESC)
+  lb.querySelectorAll('[data-ev-close]').forEach(function (el) {
+    el.addEventListener('click', close);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (!lb.classList.contains('is-open')) return;
+    if (e.key === 'Escape') close();
+    else if (e.key === '+' || e.key === '=') zoomAt(window.innerWidth/2, window.innerHeight/2, 1.3);
+    else if (e.key === '-' || e.key === '_') zoomAt(window.innerWidth/2, window.innerHeight/2, 1/1.3);
+  });
+
+  // Botones de zoom
+  lb.querySelectorAll('[data-ev-zoom]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+      var k = b.getAttribute('data-ev-zoom');
+      if (k === 'in') zoomAt(cx, cy, 1.4);
+      else if (k === 'out') zoomAt(cx, cy, 1/1.4);
+      else reset();
+    });
+  });
+
+  // Rueda / trackpad (escritorio): zoom alrededor del cursor
+  frame.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    var factor = e.deltaY < 0 ? 1.12 : 1/1.12;
+    zoomAt(e.clientX, e.clientY, factor);
+  }, { passive: false });
+
+  // Doble clic / doble toque: alternar zoom
+  frame.addEventListener('dblclick', function (e) {
+    e.preventDefault();
+    if (scale > 1.2) reset();
+    else zoomAt(e.clientX, e.clientY, 2.5);
+  });
+
+  // Pointer events unificados: 1 dedo/ratón = pan; 2 dedos = pinch
+  function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+  function mid(a, b) { return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
+
+  frame.addEventListener('pointerdown', function (e) {
+    frame.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 2) {
+      var pts = Array.from(pointers.values());
+      pinchStartDist = dist(pts[0], pts[1]);
+      pinchStartScale = scale;
+      pinchMid = mid(pts[0], pts[1]);
+      panStart = null;
+    } else if (pointers.size === 1 && scale > 1) {
+      panStart = { x: e.clientX - tx, y: e.clientY - ty };
+      frame.classList.add('is-panning');
+    }
+  });
+  frame.addEventListener('pointermove', function (e) {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 2 && pinchStartDist > 0) {
+      var pts = Array.from(pointers.values());
+      var d = dist(pts[0], pts[1]);
+      var m = mid(pts[0], pts[1]);
+      var target = pinchStartScale * (d / pinchStartDist);
+      var factor = target / scale;
+      zoomAt(m.x, m.y, factor);
+    } else if (pointers.size === 1 && panStart && scale > 1) {
+      tx = e.clientX - panStart.x;
+      ty = e.clientY - panStart.y;
+      clampPan(); apply();
+    }
+  });
+  function endPointer(e) {
+    pointers.delete(e.pointerId);
+    if (pointers.size < 2) pinchStartDist = 0;
+    if (pointers.size === 0) { panStart = null; frame.classList.remove('is-panning'); }
+  }
+  frame.addEventListener('pointerup', endPointer);
+  frame.addEventListener('pointercancel', endPointer);
+})();
+</script>
+
+{%- comment -%} ===================== JSON-LD (inline: usa section.settings/blocks en ámbito) ===================== {%- endcomment -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "MedicalWebPage",
+  "@id": {{ canonical_url | append: '#webpage' | json }},
+  "url": {{ canonical_url | json }},
+  "name": {{ page.title | default: section.settings.h1 | json }},
+  "inLanguage": "es-ES",
+  "datePublished": {{ page.published_at | date: '%Y-%m-%d' | json }},
+  "dateModified": {{ page.published_at | date: '%Y-%m-%d' | json }},
+  "description": {{ section.settings.meta_desc | default: 'Divulgación científica sobre el magnesio y presentación de un estudio observacional independiente (Congreso SEN 2019).' | json }},
+  "about": { "@type": "Substance", "name": "Magnesio" },
+  "audience": { "@type": "MedicalAudience", "audienceType": "Patient" }
+  {%- if section.settings.autor_nombre != blank -%}
+  ,"author": { "@type": "Person", "name": {{ section.settings.autor_nombre | json }}{% if section.settings.autor_titulo != blank %}, "jobTitle": {{ section.settings.autor_titulo | json }}{% endif %} }
+  {%- endif -%}
+  {%- if section.settings.revisor_nombre != blank -%}
+  ,"reviewedBy": {
+    "@type": "Person",
+    "name": {{ section.settings.revisor_nombre | json }}
+    {%- if section.settings.revisor_titulo != blank %}, "jobTitle": {{ section.settings.revisor_titulo | json }}{% endif -%}
+    {%- if section.settings.revisor_num != blank %}, "identifier": { "@type": "PropertyValue", "propertyID": "Número de colegiado", "value": {{ section.settings.revisor_num | json }} }{% endif -%}
+    {%- if section.settings.revisor_perfil != blank %}, "sameAs": [ {{ section.settings.revisor_perfil | json }} ]{% endif -%}
+  }
+  {%- endif -%}
+  ,"publisher": { "@type": "Organization", "name": {{ shop.name | json }}, "url": {{ shop.url | json }} }
+  {%- if section.settings.e_autor != blank -%}
+  ,"citation": {
+    "@type": "ScholarlyArticle",
+    "@id": {{ canonical_url | append: '#estudio' | json }},
+    "name": {{ section.settings.estudio_ref_titulo | default: section.settings.estudio_titulo | json }},
+    "author": { "@type": "Person", "name": {{ section.settings.e_autor | json }}{% if section.settings.e_afiliacion != blank %}, "affiliation": { "@type": "MedicalOrganization", "name": {{ section.settings.e_afiliacion | json }} }{% endif %} },
+    {% if section.settings.e_anio != blank %}"datePublished": {{ section.settings.e_anio | json }},{% endif %}
+    "inLanguage": "es",
+    "about": { "@type": "Substance", "name": "Magnesio" }
+    {%- if section.settings.e_foro != blank %}, "isPartOf": { "@type": "PublicationEvent", "name": {{ section.settings.e_foro | json }} }{% endif -%}
+    {%- if section.settings.e_url != blank %}, "url": {{ section.settings.e_url | json }}{% endif -%}
+  }
+  {%- endif -%}
+}
+</script>
+
+{%- if faqs.size > 0 -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {%- for b in faqs -%}
+    {
+      "@type": "Question",
+      "name": {{ b.settings.pregunta | json }},
+      "acceptedAnswer": { "@type": "Answer", "text": {{ b.settings.respuesta | strip_html | json }} }
+    }{%- unless forloop.last -%},{%- endunless -%}
+    {%- endfor -%}
+  ]
+}
+</script>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "MSI Evidencia",
+  "tag": "section",
+  "class": "msi-evidencia-section",
+  "settings": [
+    { "type": "header", "content": "Cabecera" },
+    { "type": "text", "id": "h1", "label": "Título H1", "default": "Evidencia científica del magnesio" },
+    { "type": "color", "id": "acento", "label": "Color de acento", "default": "#7bc144" },
+    { "type": "html", "id": "respuesta_directa", "label": "Respuesta directa (caja destacada, 40-60 palabras, citable)" },
+    { "type": "text", "id": "meta_desc", "label": "Descripción para schema/meta" },
+    { "type": "header", "content": "Autoría y revisión (E-E-A-T)" },
+    { "type": "text", "id": "autor_nombre", "label": "Autor: nombre" },
+    { "type": "text", "id": "autor_titulo", "label": "Autor: cargo/credencial" },
+    { "type": "text", "id": "revisor_nombre", "label": "Revisor médico: nombre (colegiado)" },
+    { "type": "text", "id": "revisor_titulo", "label": "Revisor: titulación (p. ej. Farmacéutica)" },
+    { "type": "text", "id": "revisor_num", "label": "Revisor: nº de colegiado" },
+    { "type": "url", "id": "revisor_perfil", "label": "Revisor: URL de perfil (LinkedIn/colegio)" },
+    { "type": "text", "id": "fecha_revision", "label": "Fecha de última revisión (texto)" },
+    { "type": "header", "content": "1. La ciencia del magnesio (claims EFSA)" },
+    { "type": "text", "id": "ciencia_titulo", "label": "Título de sección", "default": "Qué dice la ciencia del magnesio" },
+    { "type": "richtext", "id": "ciencia_texto", "label": "Texto (solo declaraciones autorizadas)" },
+    { "type": "header", "content": "2. El estudio en cifras" },
+    { "type": "text", "id": "estudio_titulo", "label": "Título de sección", "default": "El estudio, en cifras" },
+    { "type": "richtext", "id": "estudio_intro", "label": "Introducción (atribuida, en pasado)" },
+    { "type": "text", "id": "e_diseno", "label": "Diseño" },
+    { "type": "text", "id": "e_n", "label": "Participantes" },
+    { "type": "text", "id": "e_poblacion", "label": "Población" },
+    { "type": "text", "id": "e_intervencion", "label": "Intervención" },
+    { "type": "text", "id": "e_duracion", "label": "Duración" },
+    { "type": "textarea", "id": "e_resultado", "label": "Resultado observado" },
+    { "type": "text", "id": "e_seguridad", "label": "Tolerancia / seguridad" },
+    { "type": "text", "id": "e_autor", "label": "Autor del estudio" },
+    { "type": "text", "id": "e_afiliacion", "label": "Afiliación del autor (para schema)" },
+    { "type": "text", "id": "e_foro", "label": "Foro / congreso" },
+    { "type": "text", "id": "e_anio", "label": "Año" },
+    { "type": "text", "id": "estudio_ref_titulo", "label": "Título formal del estudio (para schema)" },
+    { "type": "url", "id": "e_url", "label": "URL de la referencia (revista Nefrología/PubMed)" },
+    { "type": "header", "content": "2b. Documento original (visor con zoom)" },
+    { "type": "text", "id": "doc_titulo", "label": "Título del bloque documento", "default": "Documento original del estudio" },
+    { "type": "image_picker", "id": "doc_imagen", "label": "Documento del estudio (imagen). Vacío = usa el asset de abajo." },
+    { "type": "text", "id": "doc_asset", "label": "Asset de respaldo (nombre de archivo en /assets)", "default": "msi-estudio-abstract.jpeg" },
+    { "type": "textarea", "id": "doc_caption", "label": "Pie / descripción del documento", "default": "Abstract del estudio presentado al Congreso de la Sociedad Española de Nefrología (2019). Servicio de Nefrología y Trasplante Renal, Hospital Clínic de Barcelona." },
+    { "type": "header", "content": "3. Qué NO significa" },
+    { "type": "richtext", "id": "que_no_significa", "label": "Aclaración honesta" },
+    { "type": "header", "content": "4. Origen y calidad" },
+    { "type": "text", "id": "origen_titulo", "label": "Título de sección", "default": "Origen y calidad de nuestro magnesio" },
+    { "type": "richtext", "id": "origen_texto", "label": "Texto (origen, natural, sin aditivos)" },
+    { "type": "header", "content": "5-6. FAQ y referencias" },
+    { "type": "text", "id": "faq_titulo", "label": "Título FAQ", "default": "Preguntas frecuentes" },
+    { "type": "text", "id": "refs_titulo", "label": "Título referencias", "default": "Referencias" },
+    { "type": "header", "content": "CTA (opcional, separado del contenido científico)" },
+    { "type": "text", "id": "cta_texto", "label": "Texto del botón" },
+    { "type": "url", "id": "cta_url", "label": "URL del botón" },
+    { "type": "header", "content": "Aviso legal" },
+    { "type": "richtext", "id": "disclaimers", "label": "Disclaimers (obligatorios + voluntarios)" }
+  ],
+  "blocks": [
+    {
+      "type": "faq",
+      "name": "Pregunta frecuente",
+      "settings": [
+        { "type": "text", "id": "pregunta", "label": "Pregunta" },
+        { "type": "richtext", "id": "respuesta", "label": "Respuesta (40-80 palabras)" }
+      ]
+    },
+    {
+      "type": "cita",
+      "name": "Referencia",
+      "settings": [
+        { "type": "text", "id": "texto", "label": "Texto de la referencia" },
+        { "type": "text", "id": "fuente", "label": "Fuente (revista, año)" },
+        { "type": "url", "id": "url", "label": "URL" }
+      ]
+    }
+  ]
+}
+{% endschema %}

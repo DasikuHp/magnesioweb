@@ -1,0 +1,553 @@
+/* ============================================================
+   MSI Shop — estilos compartidos de las páginas de compra
+   (producto y carrito). Tokens heredados de msi-landing.css.
+   Aberración cromática: fondo MUY sutil (capa fija animada) +
+   acento marcado en título/precio (.msi-chroma).
+   ============================================================ */
+
+.msi-shop {
+  --msi-orange: #e8620a;
+  --msi-green: #7bc144;
+  --msi-gold: #c9a84c;
+  --msi-bg: #050505;
+  --msi-accent: var(--msi-green);
+  --msi-glow: rgba(123, 193, 68, 0.55);
+  --msi-text: rgba(255, 255, 255, 0.92);
+  --msi-text-soft: rgba(255, 255, 255, 0.58);
+  --msi-text-muted: rgba(255, 255, 255, 0.35);
+  --msi-line: rgba(255, 255, 255, 0.08);
+  --msi-card: rgba(255, 255, 255, 0.03);
+  min-height: 100vh;
+  background: var(--msi-bg);
+  color: var(--msi-text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+}
+.msi-shop *, .msi-shop *::before, .msi-shop *::after { box-sizing: border-box; }
+.msi-shop img { max-width: 100%; height: auto; display: block; }
+.msi-shop a { color: inherit; }
+
+/* ---------- Capa 1-2: fondo aurora + aberración cromática sutil ---------- */
+.msi-shop-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+/* Aurora de marca (igual ADN que el landing) — media potencia en oscuro,
+   más suave en el tema claro. */
+.msi-shop-bg::before {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(38% 30% at 18% 22%, color-mix(in srgb, var(--msi-accent) 22%, transparent), transparent 70%),
+    radial-gradient(32% 26% at 82% 12%, rgba(123, 193, 68, 0.16), transparent 70%),
+    radial-gradient(30% 26% at 46% 60%, rgba(232, 98, 10, 0.07), transparent 70%),
+    radial-gradient(40% 34% at 70% 85%, color-mix(in srgb, var(--msi-accent) 14%, transparent), transparent 70%);
+  animation: msi-drift 46s ease-in-out infinite alternate;
+}
+@keyframes msi-drift {
+  from { transform: translate3d(-1.5%, -1%, 0) scale(1); }
+  to   { transform: translate3d(1.5%, 1.5%, 0) scale(1.06); }
+}
+/* Capa 3: noise premium anti-banding */
+.msi-shop-noise {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* Viñeta para legibilidad (patrón 7) */
+.msi-shop-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 40%, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+/* ---------- Capa 4: contenido ---------- */
+.msi-shop-main {
+  position: relative;
+  z-index: 2;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+}
+
+/* ---------- Nav compacta ---------- */
+.msi-shop-nav {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 18px 24px;
+}
+.msi-shop-nav-logo img { width: 74px; height: auto; }
+.msi-shop-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+}
+.msi-shop-nav-links a {
+  color: var(--msi-text-soft);
+  text-decoration: none;
+  transition: color 0.25s;
+}
+.msi-shop-nav-links a:hover { color: #fff; }
+.msi-shop-cart-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border: 1px solid var(--msi-line);
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  color: var(--msi-text) !important;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: border-color 0.25s, background 0.25s;
+}
+.msi-shop-cart-link:hover { border-color: var(--msi-accent); background: rgba(255, 255, 255, 0.08); }
+.msi-shop-cart-count {
+  min-width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--msi-accent);
+  color: #04120a;
+  font-size: 0.7rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+}
+
+/* ---------- Hero de producto ---------- */
+.msi-product-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: center;
+  padding: 40px 0 72px;
+}
+.msi-product-hero-media {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 420px;
+}
+.msi-product-hero-media::before {
+  content: '';
+  position: absolute;
+  width: 68%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--msi-glow), transparent 72%);
+  opacity: 0.5;
+  filter: blur(12px);
+}
+.msi-product-hero-media img {
+  position: relative;
+  max-height: 520px;
+  width: auto;
+  filter: drop-shadow(0 24px 60px rgba(0, 0, 0, 0.65));
+  animation: msi-float 7s ease-in-out infinite;
+}
+@keyframes msi-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.msi-product-hero-info { max-width: 520px; }
+.msi-shop-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--msi-text-soft);
+  margin-bottom: 22px;
+}
+.msi-shop-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--msi-accent);
+}
+.msi-product-title {
+  font-size: clamp(2.1rem, 4.6vw, 3.4rem);
+  font-weight: 900;
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  margin: 0 0 18px;
+  color: var(--msi-text);
+}
+.msi-product-sub {
+  font-size: 1.02rem;
+  line-height: 1.7;
+  color: var(--msi-text-soft);
+  margin: 0 0 26px;
+}
+.msi-product-sub p { margin: 0 0 10px; }
+.msi-product-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 26px;
+}
+.msi-product-price {
+  font-size: clamp(1.7rem, 3vw, 2.3rem);
+  font-weight: 800;
+  color: var(--msi-text);
+}
+.msi-product-price-compare {
+  font-size: 1.05rem;
+  color: var(--msi-text-muted);
+  text-decoration: line-through;
+}
+.msi-product-price-note { font-size: 0.8rem; color: var(--msi-text-muted); }
+
+/* Formulario de compra */
+.msi-product-form { display: flex; flex-direction: column; gap: 16px; }
+.msi-qty-row { display: flex; align-items: center; gap: 16px; }
+.msi-qty {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--msi-line);
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+}
+.msi-qty button {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--msi-text);
+  font-size: 1.15rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.msi-qty button:hover { background: rgba(255, 255, 255, 0.07); }
+.msi-qty input {
+  width: 48px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--msi-text);
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.msi-qty input::-webkit-outer-spin-button,
+.msi-qty input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.msi-buy-row { display: flex; flex-direction: column; gap: 12px; }
+.msi-shop-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 17px 34px;
+  border: 0;
+  border-radius: 100px;
+  background: var(--msi-accent);
+  color: #04120a;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.3s;
+  animation: msi-pulse 3.2s ease-in-out infinite;
+}
+.msi-shop-btn:hover { transform: translateY(-2px); }
+.msi-shop-btn[disabled] {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--msi-text-muted);
+  cursor: not-allowed;
+  animation: none;
+}
+@keyframes msi-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--msi-glow); }
+  50% { box-shadow: 0 0 34px 2px var(--msi-glow); }
+}
+/* Botón de pago dinámico de Shopify (Shop Pay) debajo del principal */
+.msi-payment-button .shopify-payment-button__button--unbranded { display: none; }
+.msi-payment-button .shopify-payment-button__button {
+  border-radius: 100px;
+  overflow: hidden;
+}
+.msi-payment-button .shopify-payment-button__more-options { color: var(--msi-text-muted); }
+.msi-product-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--msi-line);
+  font-size: 0.8rem;
+  color: var(--msi-text-muted);
+}
+
+/* ---------- Secciones compartidas ---------- */
+.msi-shop-h2 {
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+}
+.msi-shop-sub { color: var(--msi-text-soft); margin: 0 0 34px; font-size: 0.95rem; }
+
+/* Cross-sell cards */
+.msi-xsell { padding: 46px 0 10px; }
+.msi-xsell-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 20px;
+}
+.msi-xsell-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--msi-line);
+  border-radius: 20px;
+  background: var(--msi-card);
+  padding: 24px 20px 20px;
+  text-decoration: none;
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.55s ease, transform 0.55s ease, border-color 0.3s;
+}
+.msi-xsell-card.is-in { opacity: 1; transform: translateY(0); }
+.msi-xsell-card:hover { border-color: rgba(255, 255, 255, 0.2); }
+.msi-xsell-img {
+  height: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.msi-xsell-img img {
+  max-height: 100%;
+  width: auto;
+  filter: drop-shadow(0 14px 30px rgba(0, 0, 0, 0.6));
+  transition: transform 0.35s ease;
+}
+.msi-xsell-card:hover .msi-xsell-img img { transform: scale(1.05); }
+.msi-xsell-name { font-size: 0.98rem; font-weight: 700; margin: 0 0 4px; }
+.msi-xsell-price { font-size: 0.88rem; color: var(--msi-text-soft); margin-bottom: 14px; }
+.msi-xsell-cta {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 18px;
+  border: 0;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--msi-text);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 0.25s;
+  width: 100%;
+}
+.msi-xsell-cta:hover { background: var(--msi-accent); color: #04120a; }
+.msi-xsell-cta.is-soldout { opacity: 0.45; cursor: not-allowed; }
+
+/* ---------- Carrito ---------- */
+.msi-cart-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr);
+  gap: 34px;
+  align-items: start;
+  padding-top: 34px;
+}
+.msi-cart-title { margin: 34px 0 6px; font-size: clamp(1.9rem, 4vw, 2.8rem); font-weight: 900; letter-spacing: -0.02em; }
+.msi-cart-items { display: flex; flex-direction: column; gap: 14px; }
+.msi-cart-item {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  border: 1px solid var(--msi-line);
+  border-radius: 18px;
+  background: var(--msi-card);
+  padding: 16px 18px;
+}
+.msi-cart-item-img {
+  width: 92px;
+  height: 104px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.msi-cart-item-img img { max-height: 100%; width: auto; filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.55)); }
+.msi-cart-item-name { font-size: 0.95rem; font-weight: 700; margin: 0 0 4px; text-decoration: none; display: block; }
+.msi-cart-item-name:hover { color: var(--msi-accent); }
+.msi-cart-item-unit { font-size: 0.8rem; color: var(--msi-text-muted); margin-bottom: 10px; }
+.msi-cart-item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.msi-cart-item-line-price { font-size: 0.98rem; font-weight: 700; }
+.msi-cart-remove {
+  font-size: 0.74rem;
+  color: var(--msi-text-muted);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+.msi-cart-remove:hover { color: #ff5a5a; }
+.msi-cart-empty {
+  text-align: center;
+  padding: 90px 20px;
+}
+.msi-cart-empty p { color: var(--msi-text-soft); margin: 10px 0 26px; }
+
+/* Resumen */
+.msi-cart-summary {
+  position: sticky;
+  top: 24px;
+  border: 1px solid var(--msi-line);
+  border-radius: 20px;
+  background: rgba(10, 10, 10, 0.72);
+  backdrop-filter: blur(14px);
+  padding: 26px 24px;
+}
+.msi-cart-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: var(--msi-text-soft);
+}
+.msi-cart-summary-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-top: 14px;
+  margin-top: 10px;
+  border-top: 1px solid var(--msi-line);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--msi-text);
+}
+.msi-cart-summary-note { font-size: 0.74rem; color: var(--msi-text-muted); margin: 12px 0 18px; line-height: 1.6; }
+.msi-cart-extra-buttons { margin-top: 12px; }
+.msi-cart-extra-buttons > div { display: flex; flex-direction: column; gap: 8px; }
+
+/* ---------- Footer compacto ---------- */
+.msi-shop-footer {
+  position: relative;
+  z-index: 2;
+  border-top: 1px solid var(--msi-line);
+  margin-top: 60px;
+  padding: 30px 24px 40px;
+  text-align: center;
+  font-size: 0.76rem;
+  color: var(--msi-text-muted);
+}
+.msi-shop-footer a { color: var(--msi-text-soft); text-decoration: none; margin: 0 10px; }
+.msi-shop-footer a:hover { color: #fff; }
+.msi-shop-footer-links { margin-bottom: 12px; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .msi-product-hero { grid-template-columns: 1fr; gap: 26px; padding-top: 10px; }
+  .msi-product-hero-media { min-height: 300px; }
+  .msi-product-hero-media img { max-height: 340px; }
+  .msi-cart-layout { grid-template-columns: 1fr; }
+  .msi-cart-summary { position: static; }
+  .msi-shop-nav-links { display: none; }
+}
+@media (max-width: 600px) {
+  .msi-cart-item { grid-template-columns: 72px minmax(0, 1fr); }
+  .msi-cart-item-right { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: center; }
+}
+
+/* ---------- Tema claro (sincronizado con el interruptor del landing) ---------- */
+.msi-shop--light {
+  --msi-text: #16233f;
+  --msi-text-soft: rgba(22, 35, 63, 0.62);
+  --msi-text-muted: rgba(22, 35, 63, 0.42);
+  --msi-line: rgba(15, 30, 61, 0.1);
+  --msi-card: rgba(15, 30, 61, 0.028);
+  background: #fafbfc;
+  color: var(--msi-text);
+}
+/* Aurora más suave que en el tema oscuro */
+.msi-shop--light .msi-shop-bg::before {
+  background:
+    radial-gradient(38% 30% at 18% 22%, color-mix(in srgb, var(--msi-accent) 12%, transparent), transparent 70%),
+    radial-gradient(32% 26% at 82% 12%, rgba(123, 193, 68, 0.09), transparent 70%),
+    radial-gradient(30% 26% at 46% 60%, rgba(232, 98, 10, 0.04), transparent 70%),
+    radial-gradient(40% 34% at 70% 85%, color-mix(in srgb, var(--msi-accent) 8%, transparent), transparent 70%);
+}
+.msi-shop--light .msi-shop-noise { opacity: 0.015; }
+.msi-shop--light .msi-shop-vignette {
+  background: radial-gradient(120% 90% at 50% 40%, transparent 60%, rgba(255, 255, 255, 0.55) 100%);
+}
+.msi-shop--light .msi-shop-nav-links a { color: var(--msi-text-soft); }
+.msi-shop--light .msi-shop-nav-links a:hover { color: var(--msi-text); }
+.msi-shop--light .msi-shop-cart-link {
+  background: rgba(15, 30, 61, 0.05);
+  color: var(--msi-text) !important;
+}
+.msi-shop--light .msi-shop-cart-link:hover { background: rgba(15, 30, 61, 0.09); }
+.msi-shop--light .msi-shop-badge {
+  background: rgba(15, 30, 61, 0.05);
+  border-color: rgba(15, 30, 61, 0.1);
+}
+.msi-shop--light .msi-product-hero-media::before { opacity: 0.35; }
+.msi-shop--light .msi-product-hero-media img,
+.msi-shop--light .msi-xsell-img img,
+.msi-shop--light .msi-cart-item-img img { filter: drop-shadow(0 18px 40px rgba(15, 30, 61, 0.22)); }
+.msi-shop--light .msi-qty { background: rgba(15, 30, 61, 0.04); }
+.msi-shop--light .msi-qty button { color: var(--msi-text); }
+.msi-shop--light .msi-qty button:hover { background: rgba(15, 30, 61, 0.07); }
+.msi-shop--light .msi-qty input { color: var(--msi-text); }
+.msi-shop--light .msi-shop-btn[disabled] { background: rgba(15, 30, 61, 0.08); }
+.msi-shop--light .msi-xsell-card:hover { border-color: rgba(15, 30, 61, 0.22); }
+.msi-shop--light .msi-xsell-cta {
+  background: rgba(15, 30, 61, 0.07);
+  color: var(--msi-text);
+}
+.msi-shop--light .msi-xsell-cta:hover { background: var(--msi-accent); color: #04120a; }
+.msi-shop--light .msi-cart-summary { background: rgba(255, 255, 255, 0.78); }
+.msi-shop--light .msi-cart-remove:hover { color: #c92f2f; }
+
+/* ---------- Reduced motion / móvil: fuera efectos ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .msi-shop-bg::before,
+  .msi-product-hero-media img,
+  .msi-shop-btn { animation: none !important; }
+  .msi-xsell-card { opacity: 1; transform: none; transition: none; }
+}

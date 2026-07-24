@@ -1,0 +1,29 @@
+{% comment %}
+  Imagen de producto para las páginas de compra MSI.
+  Prioriza los packshots PNG/WebP del tema (decisión de marca);
+  featured_image de Shopify solo como último recurso.
+  Uso: {% render 'msi-shop-image', product: product, alt: '...' %}
+{% endcomment %}
+{%- liquid
+  assign msi_asset = ''
+  case product.handle
+    when 'magnesio-con-vitamina-c'
+      assign msi_asset = 'producto-1-hero.webp'
+    when 'magnesio-con-colageno'
+      assign msi_asset = 'producto-2-hero.webp'
+    when 'aceite-de-magnesio'
+      assign msi_asset = 'producto-3-hero.webp'
+    when 'pack-4-unidades'
+      assign msi_asset = 'pack-4.webp'
+    when 'pack-6-unidades'
+      assign msi_asset = 'pack-6.webp'
+  endcase
+  assign msi_alt = alt | default: product.title
+-%}
+{%- if msi_asset != blank -%}
+  <img src="{{ msi_asset | asset_url }}" alt="{{ msi_alt | escape }}" loading="lazy">
+{%- elsif product.featured_image -%}
+  {{ product.featured_image | image_url: width: 700 | image_tag: loading: 'lazy', alt: msi_alt }}
+{%- else -%}
+  <img src="{{ 'msi-logo.png' | asset_url }}" alt="{{ msi_alt | escape }}" loading="lazy">
+{%- endif -%}

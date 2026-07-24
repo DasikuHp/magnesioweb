@@ -888,7 +888,35 @@
   border-radius: 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+  cursor: pointer;
 }
+/* Botón de sonido: decorativo + affordance, pero el click en TODO el frame
+   (incluido este botón, por bubbling) activa el audio con fade progresivo. */
+.msi-promo-sound {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.msi-promo-sound:hover { background: rgba(0, 0, 0, 0.6); }
+.msi-promo-sound:active { transform: scale(0.94); }
+.msi-promo-sound-icon { width: 1.25rem; height: 1.25rem; }
+.msi-promo-sound .icon-unmuted { display: none; }
+.msi-promo.is-unmuted .msi-promo-sound .icon-muted { display: none; }
+.msi-promo.is-unmuted .msi-promo-sound .icon-unmuted { display: block; }
 .msi-promo-video {
   display: block;
   width: 100%;
@@ -1989,4 +2017,286 @@ img.msi-img-pos-top {
     opacity: 1 !important;
     transform: none !important;
   }
+}
+
+/* ============================================================
+   OFERTA — barra de envío gratis con cuenta atrás.
+   Fija arriba, por encima del nav (z 46 > nav 40 > loader la tapa
+   durante la carga con z 50). Solo se ve con .msi-has-offer; el JS
+   retira esa clase cuando la oferta caduca (sin repetición).
+   ============================================================ */
+.msi-offer-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 46;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0.35rem 1rem;
+  text-align: center;
+  /* Verde oscuro en ambos extremos: texto blanco (13px bold) pasa AA
+     (~5:1). Con #1f9d4d el extremo claro quedaba en ~3.9:1. */
+  background: linear-gradient(90deg, #0f8038 0%, #0c6f31 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.22);
+}
+.msi-offer-bar[hidden],
+.msi-landing:not(.msi-has-offer) .msi-offer-bar {
+  display: none;
+}
+.msi-offer-bar-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  /* nowrap: la barra no debe crecer más de su min-height o el nav (fijado a
+     esa altura) se solaparía con la segunda línea. */
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  justify-content: center;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.msi-offer-spark {
+  font-size: 1rem;
+  line-height: 1;
+}
+.msi-offer-text {
+  text-transform: uppercase;
+}
+.msi-offer-timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  background: rgba(0, 0, 0, 0.28);
+  border-radius: 0.4rem;
+  padding: 0.15rem 0.5rem;
+}
+/* El nav baja para dejar sitio a la barra; las anclas también se ajustan */
+.msi-landing.msi-has-offer .msi-nav {
+  top: 38px;
+}
+.msi-landing.msi-has-offer section[id] {
+  scroll-margin-top: 114px;
+}
+@media (max-width: 767px) {
+  .msi-offer-bar {
+    min-height: 34px;
+    padding: 0.3rem 0.6rem;
+  }
+  .msi-offer-bar-inner {
+    font-size: 0.72rem;
+    gap: 0.4rem;
+  }
+  .msi-landing.msi-has-offer .msi-nav {
+    top: 34px;
+  }
+  .msi-landing.msi-has-offer section[id] {
+    scroll-margin-top: 104px;
+  }
+}
+/* Bajo oferta el nav baja 34/38px; en el scrollytelling móvil los beats van
+   arriba, así que su padding-top debe bajar lo mismo o el nav los pisa. */
+@media (max-width: 1023px) {
+  .msi-landing.msi-has-offer.is-scrolly .msi-beat {
+    padding-top: calc(4.5rem + 38px + env(safe-area-inset-top, 0px));
+  }
+}
+@media (max-width: 767px) {
+  .msi-landing.msi-has-offer.is-scrolly .msi-beat {
+    padding-top: calc(4.5rem + 34px + env(safe-area-inset-top, 0px));
+  }
+}
+
+/* Envío gratis de los packs: la regla base .msi-pack-shipping tiene
+   display:flex, que pisa el [hidden] de la UA. Sin este guard los nodos
+   "ENVÍO GRATIS" quedarían visibles SIEMPRE (incluso sin oferta y sin JS).
+   Con mayor especificidad, el atributo hidden vuelve a ocultarlos. */
+.msi-landing .msi-pack-shipping[hidden] {
+  display: none;
+}
+
+/* ============================================================
+   NOSOTROS / CONTACTO
+   ============================================================ */
+.msi-about {
+  position: relative;
+  background: #080808;
+}
+.msi-about-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+  align-items: center;
+}
+@media (min-width: 768px) {
+  .msi-about-grid {
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 3rem;
+  }
+}
+.msi-about-copy .msi-eyebrow {
+  color: var(--msi-green);
+}
+.msi-about-text {
+  margin-top: 1rem;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.6);
+}
+.msi-about-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.msi-landing .msi-contact-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: inherit;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.msi-contact-row:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
+}
+.msi-contact-ic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  border-radius: 0.7rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--msi-green);
+}
+.msi-contact-row--wa .msi-contact-ic {
+  background: rgba(37, 211, 102, 0.16);
+  color: #25d366;
+}
+.msi-contact-txt {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.msi-contact-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+.msi-contact-val {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+  word-break: break-word;
+}
+
+/* ============================================================
+   BOLITA WHATSAPP — fija abajo-IZQUIERDA (el interruptor va derecha).
+   Escritorio: pastilla con icono + texto. Móvil: círculo solo icono.
+   ============================================================ */
+.msi-landing .msi-wa-fab {
+  position: fixed;
+  z-index: 45;
+  left: calc(1.5rem + env(safe-area-inset-left, 0px));
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  height: 56px;
+  padding: 0 1.15rem 0 0.5rem;
+  border-radius: 9999px;
+  /* Pastilla verde oscuro sólida: el texto blanco de la etiqueta pasa AA
+     (~5:1) sea cual sea su longitud. El verde WhatsApp de marca va en el
+     círculo del icono (abajo), donde el contraste de icono es holgado. */
+  background: #0f8038;
+  color: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28), 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.msi-wa-fab:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
+}
+.msi-wa-fab-ic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #25d366; /* verde de marca; glifo blanco */
+}
+.msi-wa-fab-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+@media (max-width: 767px) {
+  .msi-landing .msi-wa-fab {
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    justify-content: center;
+    gap: 0;
+    /* Solo icono en móvil: círculo verde WhatsApp sólido (el icono no
+       necesita el gradiente de legibilidad de la etiqueta). */
+    background: #25d366;
+    left: calc(1rem + env(safe-area-inset-left, 0px));
+    bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  }
+  .msi-wa-fab-label {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .msi-wa-fab,
+  .msi-contact-row {
+    transition: none;
+  }
+}
+
+/* ---------- Modo claro: Nosotros + contacto ---------- */
+.msi-landing--light .msi-about {
+  background: #fafbfc;
+}
+.msi-landing--light .msi-about-copy .msi-eyebrow {
+  color: var(--msi-teal-ink);
+}
+.msi-landing--light .msi-about-text {
+  color: #5b6272;
+}
+.msi-landing--light .msi-contact-row {
+  background: #ffffff;
+  border-color: #e7ebf0;
+  box-shadow: 0 8px 32px rgba(22, 24, 29, 0.06);
+}
+.msi-landing--light .msi-contact-row:hover {
+  border-color: #cfd6e0;
+  background: #ffffff;
+}
+.msi-landing--light .msi-contact-ic {
+  background: rgba(0, 196, 207, 0.1);
+  color: var(--msi-teal-ink);
+}
+.msi-landing--light .msi-contact-row--wa .msi-contact-ic {
+  background: rgba(37, 211, 102, 0.14);
+  color: #128c7e;
+}
+.msi-landing--light .msi-contact-label {
+  color: #5b6272;
+}
+.msi-landing--light .msi-contact-val {
+  color: #16181d;
 }

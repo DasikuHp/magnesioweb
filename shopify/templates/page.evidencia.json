@@ -1,0 +1,105 @@
+{
+  "layout": "msi-landing",
+  "sections": {
+    "main": {
+      "type": "msi-evidencia",
+      "settings": {
+        "h1": "Evidencia científica del magnesio",
+        "acento": "#7bc144",
+        "meta_desc": "Divulgación científica sobre el magnesio y presentación de un estudio observacional independiente (Congreso de la Sociedad Española de Nefrología, 2019, Hospital Clínic de Barcelona).",
+        "respuesta_directa": "<p>El magnesio es un mineral esencial cuyas propiedades saludables están reconocidas por la Unión Europea: contribuye a <strong>reducir el cansancio y la fatiga</strong> y al <strong>funcionamiento normal de los músculos y del sistema nervioso</strong>. En 2019, un estudio observacional independiente presentado en el Congreso de la Sociedad Española de Nefrología describió la evolución del magnesio en sangre tras la suplementación con magnesio natural en 37 pacientes. Esta página es divulgación científica y no describe propiedades terapéuticas de ningún producto.</p>",
+        "autor_nombre": "Equipo de Magnesio Natural MSI",
+        "autor_titulo": "Redacción",
+        "revisor_nombre": "",
+        "revisor_titulo": "",
+        "revisor_num": "",
+        "revisor_perfil": "",
+        "fecha_revision": "24 de julio de 2026",
+        "ciencia_titulo": "Qué dice la ciencia del magnesio",
+        "ciencia_texto": "<p>Según las declaraciones de salud autorizadas por la Unión Europea (Reglamento 432/2012), el magnesio:</p><ul><li>contribuye a disminuir el cansancio y la fatiga;</li><li>contribuye al funcionamiento normal del sistema nervioso;</li><li>contribuye al funcionamiento normal de los músculos;</li><li>contribuye a la función psicológica normal;</li><li>contribuye al equilibrio electrolítico;</li><li>contribuye al metabolismo energético normal;</li><li>contribuye al mantenimiento de los huesos y de los dientes en condiciones normales.</li></ul>",
+        "estudio_titulo": "El estudio, en cifras",
+        "estudio_intro": "<p>Los autores evaluaron la evolución del magnesio en sangre en pacientes trasplantados renales que presentaban niveles bajos de magnesio. El estudio observó lo siguiente (los resultados describen lo hallado en esa población clínica concreta y no constituyen una propiedad del producto):</p>",
+        "e_diseno": "Observacional (serie de casos), sin grupo control",
+        "e_n": "37 pacientes (16 mujeres), edad media 57±13 años",
+        "e_poblacion": "Trasplantados renales con hipomagnesemia asociada a inmunosupresión con tacrolimus",
+        "e_intervencion": "1 comprimido de Magnesio MSI al día (500 mg; 73 mg de ión magnesio)",
+        "e_duracion": "12 meses (mediciones a los 3, 6 y 12 meses)",
+        "e_resultado": "El magnesio sérico se normalizó: 1,59 mg/dL basal → 1,97 mg/dL a los 6 meses (p<0,001) → 2,0 mg/dL a los 12 meses. La función renal se mantuvo estable.",
+        "e_seguridad": "Ningún paciente abandonó el estudio por efectos secundarios",
+        "e_autor": "Dr. José-Vicente Torregrosa",
+        "e_afiliacion": "Servicio de Nefrología y Trasplante Renal, Hospital Clínic de Barcelona",
+        "e_foro": "Congreso de la Sociedad Española de Nefrología (SEN), 2019",
+        "e_anio": "2019",
+        "estudio_ref_titulo": "Normalización del magnesio sérico en trasplantados renales con la administración de magnesio natural",
+        "e_url": "",
+        "doc_titulo": "Documento original del estudio",
+        "doc_asset": "msi-estudio-abstract.jpeg",
+        "doc_caption": "Abstract del estudio presentado al Congreso de la Sociedad Española de Nefrología (2019). Servicio de Nefrología y Trasplante Renal, Hospital Clínic de Barcelona. Pulsa para leerlo con detalle y hacer zoom.",
+        "que_no_significa": "<ul><li>No es un ensayo clínico que demuestre que el producto trate o cure ninguna enfermedad.</li><li>No implica que el Hospital Clínic de Barcelona, el investigador ni la Sociedad Española de Nefrología respalden, recomienden o patrocinen este producto.</li><li>Los resultados se observaron en una población clínica específica y no son extrapolables como beneficio para la población general.</li><li>No sustituye el consejo de tu médico o farmacéutico.</li></ul>",
+        "origen_titulo": "Origen y calidad de nuestro magnesio",
+        "origen_texto": "<p>Nuestro magnesio es <strong>100% natural</strong>, obtenido por evaporación natural de las aguas de la <strong>Laguna de La Higuera (Almansa, Albacete)</strong>, una fuente rica en magnesio. Se presenta <strong>sin aditivos ni alérgenos añadidos</strong>. Puedes consultar la composición y el contenido de magnesio por dosis en la ficha de cada producto.</p>",
+        "faq_titulo": "Preguntas frecuentes",
+        "refs_titulo": "Referencias",
+        "cta_texto": "Ver nuestro magnesio natural",
+        "cta_url": "/collections/all",
+        "disclaimers": "<p>Los complementos alimenticios no deben utilizarse como sustituto de una dieta equilibrada y variada y un estilo de vida saludable. No superar la dosis diaria expresamente recomendada. Mantener fuera del alcance de los niños más pequeños.</p><p>Este contenido es divulgación científica y no constituye consejo médico. Consulta a tu médico o farmacéutico, especialmente si padeces alguna enfermedad, tomas medicación o estás en seguimiento clínico. Las únicas propiedades saludables atribuibles al magnesio son las autorizadas por la normativa de la UE (Reglamento 432/2012). Este producto no está destinado a prevenir, tratar ni curar ninguna enfermedad.</p><p><em>Transparencia: Magnesio Natural MSI comercializa productos de magnesio.</em></p>"
+      },
+      "blocks": {
+        "faq_1": {
+          "type": "faq",
+          "settings": {
+            "pregunta": "¿Qué propiedades del magnesio están reconocidas oficialmente?",
+            "respuesta": "<p>La Unión Europea reconoce que el magnesio contribuye a reducir el cansancio y la fatiga, al funcionamiento normal de los músculos y del sistema nervioso, a la función psicológica normal, al equilibrio electrolítico, al metabolismo energético y al mantenimiento de huesos y dientes.</p>"
+          }
+        },
+        "faq_2": {
+          "type": "faq",
+          "settings": {
+            "pregunta": "¿Qué se observó en el estudio de la SEN de 2019?",
+            "respuesta": "<p>En 37 pacientes trasplantados renales con niveles bajos de magnesio, el estudio observó que el magnesio en sangre se normalizó a los 6-12 meses de suplementación y que ningún paciente abandonó por efectos secundarios. Es un estudio observacional; describe lo hallado en esa población, no una propiedad del producto.</p>"
+          }
+        },
+        "faq_3": {
+          "type": "faq",
+          "settings": {
+            "pregunta": "¿De dónde procede el magnesio de MSI?",
+            "respuesta": "<p>Es magnesio 100% natural, obtenido por evaporación natural de las aguas de la Laguna de La Higuera (Almansa, Albacete), una fuente rica en magnesio, sin aditivos ni alérgenos añadidos.</p>"
+          }
+        },
+        "faq_4": {
+          "type": "faq",
+          "settings": {
+            "pregunta": "¿Se tolera bien el magnesio natural?",
+            "respuesta": "<p>En el estudio observacional citado, ningún participante abandonó por efectos secundarios. La tolerancia individual puede variar; ante cualquier molestia, consulta con tu médico o farmacéutico.</p>"
+          }
+        },
+        "ref_1": {
+          "type": "cita",
+          "settings": {
+            "texto": "Comisión Europea. Reglamento (UE) nº 432/2012: lista de declaraciones autorizadas de propiedades saludables de los alimentos.",
+            "fuente": "EUR-Lex, 2012",
+            "url": "https://eur-lex.europa.eu/legal-content/ES/TXT/?uri=CELEX:32012R0432"
+          }
+        },
+        "ref_2": {
+          "type": "cita",
+          "settings": {
+            "texto": "Torregrosa J-V. Normalización del magnesio sérico en trasplantados renales con la administración de magnesio natural. Comunicación al Congreso de la Sociedad Española de Nefrología.",
+            "fuente": "Sociedad Española de Nefrología (SEN), 2019",
+            "url": "https://www.senefro.org/"
+          }
+        },
+        "ref_3": {
+          "type": "cita",
+          "settings": {
+            "texto": "AESAN. Información sobre complementos alimenticios: etiquetado, declaraciones y seguridad.",
+            "fuente": "Agencia Española de Seguridad Alimentaria y Nutrición",
+            "url": "https://www.aesan.gob.es/AECOSAN/web/seguridad_alimentaria/subdetalle/etiquetado_complementos.htm"
+          }
+        }
+      },
+      "block_order": ["faq_1", "faq_2", "faq_3", "faq_4", "ref_1", "ref_2", "ref_3"]
+    }
+  },
+  "order": ["main"]
+}

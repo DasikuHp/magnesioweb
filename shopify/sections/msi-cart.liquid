@@ -1,0 +1,127 @@
+{% comment %}
+  ============================================================
+  MSI Cart — carrito con la estética del landing.
+  - Form nativo {% form 'cart' %}: cantidades (updates[]),
+    botón Pagar (name="checkout") y botones de pago acelerado
+    (content_for_additional_checkout_buttons) — la ruta del
+    dinero es 100% Shopify estándar.
+  - Packshots del tema vía snippet msi-shop-image.
+  ============================================================
+{% endcomment %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
+{{ 'msi-shop.css' | asset_url | stylesheet_tag }}
+
+<div class="msi-shop">
+  {% render 'msi-shop-chrome' %}
+
+  <main class="msi-shop-main">
+    <h1 class="msi-cart-title">
+      Tu carrito
+      {%- if cart.item_count > 0 -%}
+        <span style="font-size:0.45em;font-weight:600;color:var(--msi-text-muted);vertical-align:middle;margin-left:10px;">{{ cart.item_count }} {% if cart.item_count == 1 %}artículo{% else %}artículos{% endif %}</span>
+      {%- endif -%}
+    </h1>
+
+    {%- if cart.item_count == 0 -%}
+      <div class="msi-cart-empty">
+        <h2 class="msi-shop-h2">Está vacío… tu cuerpo lo nota.</h2>
+        <p>Empieza por el magnesio que mejor encaja contigo.</p>
+        <a href="/#productos" class="msi-shop-btn" style="width:auto;display:inline-flex;">Ver productos →</a>
+      </div>
+    {%- else -%}
+      {%- form 'cart', cart -%}
+        <div class="msi-cart-layout">
+          <div class="msi-cart-items">
+            {%- for item in cart.items -%}
+              <div class="msi-cart-item">
+                <a href="{{ item.url }}" class="msi-cart-item-img" aria-hidden="true" tabindex="-1">
+                  {% render 'msi-shop-image', product: item.product, alt: item.product.title %}
+                </a>
+                <div>
+                  <a href="{{ item.url }}" class="msi-cart-item-name">{{ item.product.title }}</a>
+                  <div class="msi-cart-item-unit">{{ item.final_price | money }} / ud.</div>
+                  <div class="msi-qty" data-msi-qty data-msi-qty-submit>
+                    <button type="button" data-step="-1" aria-label="Reducir cantidad de {{ item.product.title | escape }}">−</button>
+                    <input type="number" name="updates[]" value="{{ item.quantity }}" min="0" inputmode="numeric" aria-label="Cantidad de {{ item.product.title | escape }}">
+                    <button type="button" data-step="1" aria-label="Aumentar cantidad de {{ item.product.title | escape }}">+</button>
+                  </div>
+                </div>
+                <div class="msi-cart-item-right">
+                  <span class="msi-cart-item-line-price">{{ item.final_line_price | money }}</span>
+                  <a href="{{ item.url_to_remove }}" class="msi-cart-remove">Eliminar</a>
+                </div>
+              </div>
+            {%- endfor -%}
+          </div>
+
+          <aside class="msi-cart-summary">
+            <div class="msi-cart-summary-row">
+              <span>Subtotal</span>
+              <span>{{ cart.items_subtotal_price | money }}</span>
+            </div>
+            {%- if cart.cart_level_discount_applications.size > 0 -%}
+              {%- for discount in cart.cart_level_discount_applications -%}
+                <div class="msi-cart-summary-row">
+                  <span>Descuento ({{ discount.title }})</span>
+                  <span>−{{ discount.total_allocated_amount | money }}</span>
+                </div>
+              {%- endfor -%}
+            {%- endif -%}
+            <div class="msi-cart-summary-total">
+              <span>Total estimado</span>
+              <span>{{ cart.total_price | money }} {{ cart.currency.iso_code }}</span>
+            </div>
+            <p class="msi-cart-summary-note">
+              Impuestos incluidos. Los gastos de envío y los códigos de descuento
+              se aplican en la página de pago.
+            </p>
+            <button type="submit" name="checkout" class="msi-shop-btn">
+              Pagar
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            {%- if additional_checkout_buttons -%}
+              <div class="msi-cart-extra-buttons">{{ content_for_additional_checkout_buttons }}</div>
+            {%- endif -%}
+          </aside>
+        </div>
+      {%- endform -%}
+
+      {%- liquid
+        assign xsell_handles = 'magnesio-con-vitamina-c,magnesio-con-colageno,aceite-de-magnesio,pack-4-unidades,pack-6-unidades' | split: ','
+        assign in_cart = ''
+        for item in cart.items
+          assign in_cart = in_cart | append: item.product.handle | append: ','
+        endfor
+      -%}
+      <section class="msi-xsell" aria-label="Te puede interesar">
+        <h2 class="msi-shop-h2">Te puede interesar</h2>
+        <p class="msi-shop-sub">Completa tu rutina de bienestar.</p>
+        <div class="msi-xsell-grid">
+          {%- assign shown = 0 -%}
+          {%- for handle in xsell_handles -%}
+            {%- unless in_cart contains handle or shown >= 3 -%}
+              {%- assign xs = all_products[handle] -%}
+              {%- if xs != blank -%}
+                {% render 'msi-shop-card', product: xs %}
+                {%- assign shown = shown | plus: 1 -%}
+              {%- endif -%}
+            {%- endunless -%}
+          {%- endfor -%}
+        </div>
+      </section>
+    {%- endif -%}
+  </main>
+
+  {% render 'msi-shop-footer' %}
+</div>
+
+{% schema %}
+{
+  "name": "MSI Carrito",
+  "settings": [],
+  "presets": [{ "name": "MSI Carrito" }]
+}
+{% endschema %}

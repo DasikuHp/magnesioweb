@@ -1,0 +1,189 @@
+{% comment %}
+  ============================================================
+  MSI Product — ficha de producto con la estética del landing.
+  - Usa los packshots del tema (snippet msi-shop-image), no las
+    fotos de Shopify (decisión de marca).
+  - Compra por POST ({% form 'product' %}) + botón dinámico de
+    Shopify (Shop Pay) — nunca /cart/add por GET.
+  - Fondo: aurora + aberración cromática sutil (msi-shop.css).
+    Acento cromático marcado solo en título y precio.
+  ============================================================
+{% endcomment %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
+{{ 'msi-shop.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign variant = product.selected_or_first_available_variant
+
+  # Acento, línea de marca y chips por producto (mismos claims que el landing).
+  assign accent = '#7bc144'
+  assign glow = 'rgba(123,193,68,0.55)'
+  assign line = 'MSI Magnesio Natural'
+  assign blurb = product.description
+  assign chips = 'Envío 24/48h'
+  case product.handle
+    when 'magnesio-con-vitamina-c'
+      assign accent = '#e8620a'
+      assign glow = 'rgba(232,98,10,0.55)'
+      assign line = 'MSI Sport'
+      assign blurb = 'Alta absorción con Vitamina C. Ideal para el sistema nervioso, muscular y la reducción del cansancio.'
+      assign chips = '60 cápsulas veganas|Envío 24/48h|100% Vegano'
+    when 'magnesio-con-colageno'
+      assign line = 'MSI Health Bienestar'
+      assign blurb = 'Sinergia de magnesio y colágeno para articulaciones, huesos y piel. Bienestar integral y activo para cada día.'
+      assign chips = '60 cápsulas veganas|Envío 24/48h|100% Vegano'
+    when 'aceite-de-magnesio'
+      assign accent = '#c9a84c'
+      assign glow = 'rgba(201,168,76,0.55)'
+      assign line = 'MSI Aceite Transdérmico'
+      assign blurb = 'Absorción directa a través de la piel. Sales de magnesio naturales del Balneario de La Higuera.'
+      assign chips = '125 ml|Sales 100% naturales|Envío 24/48h'
+    when 'pack-4-unidades'
+      assign line = 'Ahorra con Packs'
+      assign blurb = 'El pack familiar: cuatro unidades para no quedarte sin tu magnesio. Cuanto más cuidas tu bienestar, más ahorras.'
+      assign chips = '4 unidades|Envío 24/48h'
+    when 'pack-6-unidades'
+      assign line = 'Ahorra con Packs'
+      assign blurb = 'El pack total: seis unidades con el mejor precio por unidad y portes gratis incluidos.'
+      assign chips = '6 unidades|PORTES GRATIS|Envío 24/48h'
+  endcase
+
+  assign xsell_handles = 'magnesio-con-vitamina-c,magnesio-con-colageno,aceite-de-magnesio,pack-4-unidades,pack-6-unidades' | split: ','
+-%}
+
+<div class="msi-shop" style="--msi-accent: {{ accent }}; --msi-glow: {{ glow }};">
+  {% render 'msi-shop-chrome' %}
+
+  <main class="msi-shop-main">
+    {% render 'msi-breadcrumbs' %}
+    <section class="msi-product-hero">
+      <div class="msi-product-hero-media" data-msi-reveal>
+        {% render 'msi-shop-image', product: product, alt: product.title %}
+      </div>
+
+      <div class="msi-product-hero-info">
+        <span class="msi-shop-badge"><span class="msi-shop-badge-dot"></span>{{ line }}</span>
+
+        <h1 class="msi-product-title">{{ product.title }}</h1>
+
+        <div class="msi-product-sub">
+          {%- if blurb == product.description -%}
+            {{ product.description }}
+          {%- else -%}
+            <p>{{ blurb }}</p>
+          {%- endif -%}
+        </div>
+
+        <div class="msi-product-price-row">
+          <span class="msi-product-price">{{ variant.price | money }}</span>
+          {%- if variant.compare_at_price > variant.price -%}
+            <span class="msi-product-price-compare">{{ variant.compare_at_price | money }}</span>
+          {%- endif -%}
+          <span class="msi-product-price-note">Impuestos incluidos</span>
+        </div>
+
+        {%- form 'product', product, class: 'msi-product-form' -%}
+          <input type="hidden" name="id" value="{{ variant.id }}">
+          <div class="msi-qty-row">
+            <div class="msi-qty" data-msi-qty>
+              <button type="button" data-step="-1" aria-label="Reducir cantidad">−</button>
+              <input type="number" name="quantity" value="1" min="1" inputmode="numeric" aria-label="Cantidad">
+              <button type="button" data-step="1" aria-label="Aumentar cantidad">+</button>
+            </div>
+          </div>
+          <div class="msi-buy-row">
+            {%- if product.available -%}
+              <button type="submit" class="msi-shop-btn">
+                Añadir al carrito
+                <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div class="msi-payment-button">{{ form | payment_button }}</div>
+            {%- else -%}
+              <button type="submit" class="msi-shop-btn" disabled>Agotado</button>
+            {%- endif -%}
+          </div>
+        {%- endform -%}
+
+        {%- assign chip_list = chips | split: '|' -%}
+        <div class="msi-product-meta">
+          {%- for chip in chip_list -%}<span>✓ {{ chip }}</span>{%- endfor -%}
+          <span>🔒 Pago seguro</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="msi-xsell" aria-label="Otros productos MSI">
+      <h2 class="msi-shop-h2">Te puede interesar</h2>
+      <p class="msi-shop-sub">Combínalos para máximos resultados.</p>
+      <div class="msi-xsell-grid">
+        {%- assign shown = 0 -%}
+        {%- for handle in xsell_handles -%}
+          {%- if handle != product.handle and shown < 3 -%}
+            {%- assign xs = all_products[handle] -%}
+            {%- if xs != blank -%}
+              {% render 'msi-shop-card', product: xs %}
+              {%- assign shown = shown | plus: 1 -%}
+            {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </section>
+  </main>
+
+  {% render 'msi-shop-footer' %}
+</div>
+
+{%- liquid
+  assign img_url = ''
+  case product.handle
+    when 'magnesio-con-vitamina-c'
+      assign img_url = 'producto-1-hero.webp' | asset_url
+    when 'magnesio-con-colageno'
+      assign img_url = 'producto-2-hero.webp' | asset_url
+    when 'aceite-de-magnesio'
+      assign img_url = 'producto-3-hero.webp' | asset_url
+    when 'pack-4-unidades'
+      assign img_url = 'pack-4.webp' | asset_url
+    when 'pack-6-unidades'
+      assign img_url = 'pack-6.webp' | asset_url
+    else
+      assign img_url = product.featured_image | image_url: width: 900
+  endcase
+  if img_url contains '//'
+    unless img_url contains 'https:'
+      assign img_url = 'https:' | append: img_url
+    endunless
+  endif
+-%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": {{ product.title | json }},
+  "image": {{ img_url | json }},
+  "description": {{ blurb | strip_html | truncate: 300 | json }},
+  "brand": { "@type": "Brand", "name": "MSI Magnesio Natural" },
+  "sku": {{ variant.sku | default: variant.id | json }},
+  {% if variant.barcode != blank %}"gtin": {{ variant.barcode | json }},{% endif %}
+  "offers": {
+    "@type": "Offer",
+    "url": {{ request.origin | append: product.url | json }},
+    "priceCurrency": {{ cart.currency.iso_code | json }},
+    "price": {{ variant.price | divided_by: 100.0 | json }},
+    "priceValidUntil": "{{ 'now' | date: '%Y' }}-12-31",
+    "availability": "{% if product.available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
+    "itemCondition": "https://schema.org/NewCondition"
+  }
+}
+</script>
+
+{% schema %}
+{
+  "name": "MSI Producto",
+  "settings": [],
+  "presets": [{ "name": "MSI Producto" }]
+}
+{% endschema %}

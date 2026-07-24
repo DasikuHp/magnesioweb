@@ -119,10 +119,43 @@
   }
 {% endstyle %}
 
+{%- liquid
+  # Modo de color por defecto: CLARO (blanco). El visitante puede pasar a
+  # oscuro con el interruptor; su elección se guarda en localStorage y manda
+  # sobre este default (script anti-FOUC inline + JS).
+  assign msi_mode = section.settings.color_mode | default: 'light'
+
+  # Oferta 24h / envío gratis: el reloj vive por visitante en localStorage
+  # (la IP no es accesible desde el navegador sin backend). El servidor solo
+  # decide si la oferta está habilitada; el JS gestiona cuenta atrás y caducidad.
+  assign offer_on = section.settings.offer_enabled
+  assign offer_hours = section.settings.offer_hours | default: '24' | strip
+
+  # — Contacto (Nosotros) —
+  assign msi_email = section.settings.contact_email | strip
+  assign msi_phone_disp = section.settings.contact_phone | strip
+  assign msi_phone_digits = msi_phone_disp | remove: ' ' | remove: '+' | remove: '-'
+  if msi_phone_disp contains '+'
+    assign msi_tel_href = 'tel:+' | append: msi_phone_digits
+  else
+    assign msi_tel_href = 'tel:+34' | append: msi_phone_digits
+  endif
+
+  # — WhatsApp (bolita + botón de contacto). El número se normaliza a solo
+  # dígitos con prefijo de país para wa.me; el mensaje va url-encoded. —
+  assign msi_wa_num = section.settings.wa_number | remove: ' ' | remove: '+' | remove: '-' | strip
+  assign msi_wa_msg = section.settings.wa_message | default: 'Hola, quiero comprar Magnesio MSI. ¿Me podéis ayudar?'
+  assign msi_wa_msg_enc = msi_wa_msg | url_encode
+  assign msi_wa_href = 'https://wa.me/' | append: msi_wa_num | append: '?text=' | append: msi_wa_msg_enc
+-%}
+
 <div
-  class="msi-landing{% if section.settings.color_mode == 'light' %} msi-landing--light{% endif %}"
+  class="msi-landing{% if msi_mode == 'light' %} msi-landing--light{% endif %}{% if offer_on %} msi-has-offer{% endif %}"
   data-msi-landing
-  data-color-mode="{{ section.settings.color_mode | default: 'dark' }}"
+  data-color-mode="{{ msi_mode }}"
+  data-offer-enabled="{% if offer_on %}true{% else %}false{% endif %}"
+  data-offer-hours="{{ offer_hours }}"
+  data-offer-repeat="{% if section.settings.offer_repeat %}true{% else %}false{% endif %}"
   data-frames-base="{{ frames_base }}"
   data-frames-v-light="{{ frames_v_light }}"
   data-frames-v-m-dark="{{ frames_v_m_dark }}"
@@ -132,6 +165,23 @@
   data-frame-count="121"
   data-mobile-scrolly="{% if section.settings.enable_mobile_scrollytelling == false %}false{% else %}true{% endif %}"
 >
+  {%- comment -%} ===== Barra de oferta (cuenta atrás + envío gratis) =====
+       Fija arriba, por encima del nav. Se renderiza si la oferta está
+       habilitada en el editor; el JS pone el reloj real por visitante y la
+       oculta si caducó (sin repetición). {%- endcomment -%}
+  {%- if offer_on -%}
+    {%- comment -%} Sin aria-live/role=status: el timer cambia cada segundo y
+         un lector de pantalla lo repetiría sin parar. El mensaje estático
+         ("ENVÍO GRATIS · Oferta 24h") ya comunica la oferta; el reloj es
+         urgencia visual (aria-hidden). {%- endcomment -%}
+    <div class="msi-offer-bar" data-msi-offer>
+      <span class="msi-offer-bar-inner">
+        <span class="msi-offer-spark" aria-hidden="true">🚚</span>
+        <span class="msi-offer-text">{{ section.settings.offer_text | default: 'ENVÍO GRATIS · Oferta 24h' | escape }}</span>
+        <span class="msi-offer-timer" data-msi-offer-timer aria-hidden="true">{{ offer_hours }}:00:00</span>
+      </span>
+    </div>
+  {%- endif -%}
   {%- comment -%} Interruptor claro/oscuro (estilo iOS: pastilla + botón deslizante) {%- endcomment -%}
   <button
     class="msi-mode-toggle"
@@ -168,7 +218,7 @@
         <li><a href="#packs">Packs</a></li>
         <li><a href="#beneficios">Beneficios</a></li>
         <li><a href="#para-quien">Para quién</a></li>
-        <li><a href="#nosotros">Nosotros</a></li>
+        {%- if section.settings.show_about -%}<li><a href="#nosotros">Nosotros</a></li>{%- endif -%}
       </ul>
       <a href="#packs" class="msi-nav-cta">
         Comprar ahora
@@ -280,7 +330,7 @@
           {%- endif -%}
         </div>
         <span class="msi-beat-tag">{{ section.settings.beat_a_tag }}</span>
-        <h1 class="msi-beat-title">{{ section.settings.beat_a_title | newline_to_br }}</h1>
+        <h2 class="msi-beat-title">{{ section.settings.beat_a_title | newline_to_br }}</h2>
         <p class="msi-beat-sub">{{ section.settings.beat_a_sub }}</p>
         <div class="msi-hero-mobile-price">{{ section.settings.beat_d_title }}</div>
         <a href="#packs" class="msi-beat-cta">
@@ -293,27 +343,11 @@
     </div>
   </div>
 
-  {%- comment -%} Anti-FOUC: la elección claro/oscuro del visitante
-       (localStorage) se aplica ANTES del primer paint. Sin esto, quien
-       eligió modo claro veía un fogonazo negro en cada visita hasta que
-       corría el JS diferido. Inline y mínimo a propósito. {%- endcomment -%}
-  <script>
-    (function () {
-      try {
-        var m = window.localStorage.getItem('msi-color-mode');
-        if (m !== 'light' && m !== 'dark') return;
-        var root = document.currentScript.closest('[data-msi-landing]');
-        if (!root) return;
-        root.classList.toggle('msi-landing--light', m === 'light');
-        root.setAttribute('data-color-mode', m);
-        var p = root.querySelector('[data-msi-poster]');
-        if (p) {
-          var s = p.getAttribute(m === 'light' ? 'data-src-light' : 'data-src-dark');
-          if (s) p.setAttribute('src', s);
-        }
-      } catch (e) { /* localStorage bloqueado: se queda el modo del editor */ }
-    })();
-  </script>
+  {%- comment -%} La página abre SIEMPRE en el modo del editor (blanco por
+       defecto): no se aplica ninguna elección previa guardada. El interruptor
+       cambia a negro solo durante la sesión actual; al recargar vuelve a
+       blanco. (Antes un anti-FOUC re-aplicaba el localStorage y quien había
+       tocado negro lo veía negro al abrir — no es lo que se quiere.) {%- endcomment -%}
 
   {%- comment -%} ===== PRODUCTOS ===== {%- endcomment -%}
   <section id="productos" class="msi-section msi-products">
@@ -457,6 +491,16 @@
             {%- endif -%}
           </div>
         {%- endif -%}
+        <button type="button" class="msi-promo-sound" data-msi-promo-sound aria-pressed="false" aria-label="Activar sonido del vídeo">
+          <svg class="msi-promo-sound-icon icon-muted" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor"/>
+            <path d="M16 8.5l5 7M21 8.5l-5 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          <svg class="msi-promo-sound-icon icon-unmuted" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor"/>
+            <path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
       </div>
     </section>
   {%- endif -%}
@@ -488,7 +532,10 @@
           </div>
           <div class="msi-pack-price">{{ section.settings.pack_1_price }}</div>
           <div class="msi-pack-perunit">{{ section.settings.pack_1_perunit }}</div>
-          <div class="msi-pack-shipping">Envío estándar</div>
+          {%- comment -%} Envío: sin coste visible en la página. Solo aparece
+               'ENVÍO GRATIS' mientras la oferta esté activa (lo revela el JS);
+               fuera de oferta queda oculto y el envío se calcula en el pago. {%- endcomment -%}
+          <div class="msi-pack-shipping msi-ship-offer" data-msi-ship hidden><span class="msi-pack-shipping-free">ENVÍO GRATIS</span></div>
           {%- if pack_1_variant != blank -%}
             <a href="{{ routes.cart_add_url }}?id={{ pack_1_variant }}&quantity=1" class="msi-pack-btn">Comprar ahora</a>
           {%- else -%}
@@ -511,7 +558,10 @@
           <span class="msi-pack-savings">✅ {{ section.settings.pack_4_savings }}</span>
           <div class="msi-pack-price">{{ section.settings.pack_4_price }}</div>
           <div class="msi-pack-perunit">{{ section.settings.pack_4_perunit }}</div>
-          <div class="msi-pack-shipping">Envío estándar</div>
+          {%- comment -%} Envío: sin coste visible en la página. Solo aparece
+               'ENVÍO GRATIS' mientras la oferta esté activa (lo revela el JS);
+               fuera de oferta queda oculto y el envío se calcula en el pago. {%- endcomment -%}
+          <div class="msi-pack-shipping msi-ship-offer" data-msi-ship hidden><span class="msi-pack-shipping-free">ENVÍO GRATIS</span></div>
           {%- if pack_4_variant != blank -%}
             <a href="{{ routes.cart_add_url }}?id={{ pack_4_variant }}&quantity=1" class="msi-pack-btn msi-pack-btn--featured">Comprar Pack de 4</a>
           {%- else -%}
@@ -700,7 +750,7 @@
   </section>
 
   {%- comment -%} ===== LIFESTYLE ===== {%- endcomment -%}
-  <section id="nosotros" class="msi-section msi-lifestyle">
+  <section id="vida-activa" class="msi-section msi-lifestyle">
     <div class="msi-container">
       <div class="msi-section-head" data-msi-reveal>
         <span class="msi-eyebrow">Vida Activa</span>
@@ -743,6 +793,61 @@
       </div>
     </div>
   </section>
+
+  {%- comment -%} ===== NOSOTROS / CONTACTO ===== {%- endcomment -%}
+  {%- if section.settings.show_about -%}
+    <section id="nosotros" class="msi-section msi-about">
+      <div class="msi-aurora" aria-hidden="true"></div>
+      <div class="msi-container msi-container--md">
+        <div class="msi-about-grid">
+          <div class="msi-about-copy" data-msi-reveal>
+            <span class="msi-eyebrow">Nosotros</span>
+            <h2 class="msi-h2">{{ section.settings.about_title | default: 'Magnesio Natural, cerca de ti' | escape }}</h2>
+            <p class="msi-about-text">{{ section.settings.about_text | default: 'Somos Magnesio Natural (MSI): magnesio de alta calidad para estilos de vida activos. ¿Dudas con tu pedido o quieres asesoramiento? Habla con nosotros, te respondemos rápido.' | escape | newline_to_br }}</p>
+          </div>
+
+          <div class="msi-about-contact" data-msi-reveal>
+            {%- if msi_email != blank -%}
+              <a class="msi-contact-row" href="mailto:{{ msi_email | escape }}">
+                <span class="msi-contact-ic" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+                </span>
+                <span class="msi-contact-txt">
+                  <span class="msi-contact-label">Email</span>
+                  <span class="msi-contact-val">{{ msi_email | escape }}</span>
+                </span>
+              </a>
+            {%- endif -%}
+            {%- if msi_phone_disp != blank -%}
+              <a class="msi-contact-row" href="{{ msi_tel_href | escape }}">
+                <span class="msi-contact-ic" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/></svg>
+                </span>
+                <span class="msi-contact-txt">
+                  <span class="msi-contact-label">Teléfono</span>
+                  <span class="msi-contact-val">{{ msi_phone_disp | escape }}</span>
+                </span>
+              </a>
+            {%- endif -%}
+            {%- if msi_wa_num != blank -%}
+              <a class="msi-contact-row msi-contact-row--wa" href="{{ msi_wa_href | escape }}" target="_blank" rel="noopener noreferrer">
+                <span class="msi-contact-ic" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M17.5 14.4c-.3-.15-1.8-.9-2.05-1-.28-.1-.48-.15-.68.15-.2.3-.78 1-.96 1.2-.18.2-.35.22-.65.07-.3-.15-1.27-.47-2.42-1.5-.9-.8-1.5-1.78-1.67-2.08-.18-.3-.02-.46.13-.6.14-.14.3-.35.45-.53.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.53-.08-.15-.68-1.63-.93-2.23-.24-.58-.5-.5-.68-.51h-.58c-.2 0-.53.07-.8.38-.28.3-1.05 1.02-1.05 2.5s1.08 2.9 1.23 3.1c.15.2 2.13 3.25 5.16 4.56.72.3 1.28.5 1.72.64.72.23 1.38.2 1.9.12.58-.08 1.8-.73 2.05-1.44.25-.7.25-1.32.18-1.44-.07-.12-.27-.2-.57-.35Z"/><path d="M12.05 2C6.5 2 2 6.5 2 12.05c0 1.77.46 3.5 1.35 5.02L2 22l5.05-1.32a10 10 0 0 0 5 1.27h.01c5.55 0 10.05-4.5 10.05-10.05C22.1 6.5 17.6 2 12.05 2Zm0 18.15h-.01a8.1 8.1 0 0 1-4.13-1.13l-.3-.18-3 .78.8-2.92-.2-.3a8.13 8.13 0 1 1 6.84 3.75Z"/></svg>
+                </span>
+                <span class="msi-contact-txt">
+                  <span class="msi-contact-label">WhatsApp</span>
+                  <span class="msi-contact-val">Escríbenos ahora</span>
+                </span>
+              </a>
+            {%- endif -%}
+          </div>
+        </div>
+      </div>
+    </section>
+  {%- endif -%}
+
+  {%- comment -%} ===== EVIDENCIA CIENTÍFICA (público) — informe con lectura integrada ===== {%- endcomment -%}
+  {% render 'msi-evidencia-home' %}
 
   {%- comment -%} ===== NEWSLETTER (formulario nativo de Shopify) ===== {%- endcomment -%}
   <section class="msi-newsletter" data-msi-reveal>
@@ -818,6 +923,25 @@
     </footer>
   {%- endif -%}
 
+  {%- comment -%} Bolita WhatsApp: fija abajo-IZQUIERDA (el interruptor de tema
+       ocupa abajo-derecha). Abre WhatsApp con un mensaje de compra prellenado —
+       funciona en escritorio (WhatsApp Web/app) y en móvil (app). {%- endcomment -%}
+  {%- if section.settings.show_wa and msi_wa_num != blank -%}
+    <a
+      class="msi-wa-fab"
+      href="{{ msi_wa_href | escape }}"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="{{ section.settings.wa_label | default: 'Comprar por WhatsApp' | escape }}"
+      data-msi-wa-fab
+    >
+      <span class="msi-wa-fab-ic" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><path d="M17.5 14.4c-.3-.15-1.8-.9-2.05-1-.28-.1-.48-.15-.68.15-.2.3-.78 1-.96 1.2-.18.2-.35.22-.65.07-.3-.15-1.27-.47-2.42-1.5-.9-.8-1.5-1.78-1.67-2.08-.18-.3-.02-.46.13-.6.14-.14.3-.35.45-.53.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.53-.08-.15-.68-1.63-.93-2.23-.24-.58-.5-.5-.68-.51h-.58c-.2 0-.53.07-.8.38-.28.3-1.05 1.02-1.05 2.5s1.08 2.9 1.23 3.1c.15.2 2.13 3.25 5.16 4.56.72.3 1.28.5 1.72.64.72.23 1.38.2 1.9.12.58-.08 1.8-.73 2.05-1.44.25-.7.25-1.32.18-1.44-.07-.12-.27-.2-.57-.35Z"/><path d="M12.05 2C6.5 2 2 6.5 2 12.05c0 1.77.46 3.5 1.35 5.02L2 22l5.05-1.32a10 10 0 0 0 5 1.27h.01c5.55 0 10.05-4.5 10.05-10.05C22.1 6.5 17.6 2 12.05 2Zm0 18.15h-.01a8.1 8.1 0 0 1-4.13-1.13l-.3-.18-3 .78.8-2.92-.2-.3a8.13 8.13 0 1 1 6.84 3.75Z"/></svg>
+      </span>
+      <span class="msi-wa-fab-label">{{ section.settings.wa_label | default: 'Compra por WhatsApp' | escape }}</span>
+    </a>
+  {%- endif -%}
+
   {%- comment -%} Pop-up de carrito: intercepta los botones Comprar (AJAX) para seguir comprando sin salir de la página. {%- endcomment -%}
   {% render 'msi-cart-drawer' %}
 </div>
@@ -835,13 +959,44 @@
     {
       "type": "select",
       "id": "color_mode",
-      "label": "Fondo de la sección",
+      "label": "Fondo inicial de la sección",
       "options": [
-        { "value": "dark", "label": "Oscuro (negro, actual)" },
-        { "value": "light", "label": "Claro (blanco) — piloto verde" }
+        { "value": "light", "label": "Claro (blanco) — por defecto" },
+        { "value": "dark", "label": "Oscuro (negro)" }
       ],
-      "default": "dark",
-      "info": "Modo claro solo tiene animación hero propia para la cápsula verde. El resto de fotos siguen en fondo oscuro."
+      "default": "light",
+      "info": "La página empieza SIEMPRE en este fondo. El visitante puede cambiarlo con el interruptor (abajo-derecha) y su elección se recuerda en su navegador."
+    },
+    {
+      "type": "header",
+      "content": "Oferta y Envío gratis (cuenta atrás)"
+    },
+    {
+      "type": "checkbox",
+      "id": "offer_enabled",
+      "label": "Activar oferta con cuenta atrás",
+      "default": true,
+      "info": "Muestra una barra arriba con envío gratis y un temporizador. IMPORTANTE: el cobro real de 7€ se quita en Shopify → Ajustes → Envío (tarifa 0€) o con un descuento automático de envío gratis. El código solo muestra el mensaje."
+    },
+    {
+      "type": "text",
+      "id": "offer_text",
+      "label": "Texto de la barra",
+      "default": "ENVÍO GRATIS · Oferta 24h"
+    },
+    {
+      "type": "text",
+      "id": "offer_hours",
+      "label": "Duración de la oferta (horas)",
+      "default": "24",
+      "info": "Cada visitante tiene su propia cuenta atrás desde su primera visita, guardada en su navegador (la IP no es accesible sin servidor)."
+    },
+    {
+      "type": "checkbox",
+      "id": "offer_repeat",
+      "label": "Reiniciar la oferta al caducar",
+      "default": true,
+      "info": "Activado: cuando el reloj de un visitante llega a 0, vuelve a empezar (envío gratis siempre visible con urgencia). Desactivado: al caducar, desaparece la oferta y el envío solo se ve en el pago."
     },
     {
       "type": "header",
@@ -1343,6 +1498,71 @@
       "type": "image_picker",
       "id": "life_image_3",
       "label": "Imagen 3 (La gama completa)"
+    },
+    {
+      "type": "header",
+      "content": "Nosotros / Contacto"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_about",
+      "label": "Mostrar sección \"Nosotros\"",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "about_title",
+      "label": "Título",
+      "default": "Magnesio Natural, cerca de ti"
+    },
+    {
+      "type": "textarea",
+      "id": "about_text",
+      "label": "Texto",
+      "default": "Somos Magnesio Natural (MSI): magnesio de alta calidad para estilos de vida activos. ¿Dudas con tu pedido o quieres asesoramiento? Habla con nosotros, te respondemos rápido."
+    },
+    {
+      "type": "text",
+      "id": "contact_email",
+      "label": "Email de contacto",
+      "default": "contacto@example.com"
+    },
+    {
+      "type": "text",
+      "id": "contact_phone",
+      "label": "Teléfono (visible)",
+      "default": "600 000 000",
+      "info": "Se muestra tal cual. El enlace de llamada añade el prefijo +34 automáticamente (o usa el tuyo si escribes uno con +)."
+    },
+    {
+      "type": "header",
+      "content": "Botón WhatsApp (bolita flotante)"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_wa",
+      "label": "Mostrar bolita de WhatsApp",
+      "default": true,
+      "info": "Aparece fija abajo-izquierda en escritorio y móvil. Abre WhatsApp con un mensaje de compra ya escrito."
+    },
+    {
+      "type": "text",
+      "id": "wa_number",
+      "label": "Número de WhatsApp (con prefijo país)",
+      "default": "34 600 000 000",
+      "info": "Formato internacional. España = 34 + número. Se limpia a solo dígitos para el enlace wa.me."
+    },
+    {
+      "type": "textarea",
+      "id": "wa_message",
+      "label": "Mensaje prellenado",
+      "default": "Hola, quiero comprar Magnesio MSI. ¿Me podéis ayudar?"
+    },
+    {
+      "type": "text",
+      "id": "wa_label",
+      "label": "Texto del botón / etiqueta accesible",
+      "default": "Compra por WhatsApp"
     },
     {
       "type": "header",

@@ -19,11 +19,73 @@
     {%- endif -%}
     <link rel="canonical" href="{{ canonical_url }}">
 
+    {%- comment -%} SEO: Open Graph + Twitter (MSI) — comparte bien en redes {%- endcomment -%}
+    {%- liquid
+      assign og_title = page_title
+      assign og_desc  = page_description | default: shop.description
+      assign og_type  = 'website'
+      assign og_image = ''
+      if template.name == 'product' and product
+        assign og_type = 'product'
+        assign og_desc = product.description | default: page_description | strip_html | truncate: 200
+        if product.featured_image
+          assign og_image = product.featured_image | image_url: width: 1200
+        endif
+      endif
+      if og_image == blank
+        if page_image
+          assign og_image = page_image | image_url: width: 1200
+        else
+          assign og_image = 'producto-1-hero.webp' | asset_url
+        endif
+      endif
+      if og_image contains '//'
+        unless og_image contains 'https:'
+          assign og_image = 'https:' | append: og_image
+        endunless
+      endif
+    -%}
+    <meta property="og:site_name" content="{{ shop.name | escape }}">
+    <meta property="og:type" content="{{ og_type }}">
+    <meta property="og:title" content="{{ og_title | escape }}">
+    {%- if og_desc != blank %}<meta property="og:description" content="{{ og_desc | escape }}">{% endif -%}
+    <meta property="og:url" content="{{ canonical_url }}">
+    <meta property="og:image" content="{{ og_image }}">
+    <meta property="og:locale" content="es_ES">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ og_title | escape }}">
+    {%- if og_desc != blank %}<meta name="twitter:description" content="{{ og_desc | escape }}">{% endif -%}
+    <meta name="twitter:image" content="{{ og_image }}">
+
+    {%- comment -%} Aquí va el meta de verificación de Google Search Console de la tienda. {%- endcomment -%}
+
+    <link rel="icon" type="image/png" href="{{ 'msi-favicon.png' | asset_url }}">
+    <link rel="apple-touch-icon" href="{{ 'msi-favicon.png' | asset_url }}">
+
     {{ content_for_header }}
 
     <style>
       html, body { margin: 0; padding: 0; background: #050505; }
     </style>
+
+    {%- comment -%} SEO: Organization + WebSite JSON-LD (solo home) {%- endcomment -%}
+    {%- if template.name == 'index' -%}
+    {%- liquid
+      assign logo_url = 'msi-logo.png' | asset_url
+      if logo_url contains '//'
+        unless logo_url contains 'https:'
+          assign logo_url = 'https:' | append: logo_url
+        endunless
+      endif
+    -%}
+    {%- comment -%} Cuando tengas los perfiles reales, añade "sameAs":["https://instagram.com/...","https://facebook.com/...","<QID Wikidata>"] al Organization. {%- endcomment -%}
+    <script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Organization","name":{{ shop.name | json }},"url":{{ shop.url | json }},"logo":{{ logo_url | json }}}
+    </script>
+    <script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","name":{{ shop.name | json }},"url":{{ shop.url | json }},"potentialAction":{"@type":"SearchAction","target":"{{ shop.url }}/search?q={search_term_string}","query-input":"required name=search_term_string"}}
+    </script>
+    {%- endif -%}
   </head>
   <body>
     {{ content_for_layout }}

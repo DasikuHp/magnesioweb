@@ -1,0 +1,28 @@
+{% comment %}
+  Card de cross-sell ("Te puede interesar") de las páginas de compra MSI.
+  Añade al carrito por POST (form nativo), nunca por GET.
+  Uso: {% render 'msi-shop-card', product: xs_product %}
+{% endcomment %}
+{%- if product != blank -%}
+  <div class="msi-xsell-card" data-msi-reveal>
+    <a href="{{ product.url }}" class="msi-xsell-img" aria-hidden="true" tabindex="-1">
+      {% render 'msi-shop-image', product: product %}
+    </a>
+    <h3 class="msi-xsell-name"><a href="{{ product.url }}" style="text-decoration:none;color:inherit;">{{ product.title }}</a></h3>
+    <div class="msi-xsell-price">
+      {{ product.selected_or_first_available_variant.price | money }}
+      {%- if product.compare_at_price > product.price %}
+        <s style="opacity:.5;margin-left:6px;">{{ product.compare_at_price | money }}</s>
+      {%- endif %}
+    </div>
+    {%- if product.available -%}
+      {%- form 'product', product -%}
+        <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+        <input type="hidden" name="quantity" value="1">
+        <button type="submit" class="msi-xsell-cta">Añadir al carrito</button>
+      {%- endform -%}
+    {%- else -%}
+      <span class="msi-xsell-cta is-soldout" aria-disabled="true">Agotado</span>
+    {%- endif -%}
+  </div>
+{%- endif -%}

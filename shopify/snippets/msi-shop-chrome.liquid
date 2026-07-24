@@ -1,0 +1,32 @@
+{% comment %}
+  "Chrome" compartido de las páginas de compra MSI: capas de fondo
+  (aurora + aberración cromática sutil + noise + viñeta) y nav.
+  Uso: {% render 'msi-shop-chrome' %} justo al abrir .msi-shop.
+{% endcomment %}
+{%- comment -%} Sincroniza el tema claro/oscuro elegido en la landing (localStorage) antes de pintar. {%- endcomment -%}
+<script>
+  try {
+    if (window.localStorage.getItem('msi-color-mode') === 'light') {
+      document.currentScript.closest('.msi-shop').classList.add('msi-shop--light');
+    }
+  } catch (e) { /* localStorage bloqueado: se queda el tema oscuro */ }
+</script>
+<div class="msi-shop-bg" aria-hidden="true"></div>
+<div class="msi-shop-noise" aria-hidden="true"></div>
+<div class="msi-shop-vignette" aria-hidden="true"></div>
+
+<nav class="msi-shop-nav">
+  <a href="{{ routes.root_url }}" class="msi-shop-nav-logo" aria-label="MSI Magnesio Natural — inicio">
+    <img src="{{ 'msi-logo.png' | asset_url }}" alt="MSI Magnesio Natural" width="662" height="377">
+  </a>
+  <ul class="msi-shop-nav-links">
+    <li><a href="{{ routes.root_url }}">Inicio</a></li>
+    <li><a href="/#productos">Productos</a></li>
+    <li><a href="/#packs">Packs</a></li>
+    <li><a href="/#beneficios">Beneficios</a></li>
+  </ul>
+  <a href="{{ routes.cart_url }}" class="msi-shop-cart-link">
+    Carrito
+    <span class="msi-shop-cart-count">{{ cart.item_count }}</span>
+  </a>
+</nav>

@@ -1,0 +1,72 @@
+{% comment %}
+  MSI Breadcrumbs — ARCHIVO NUEVO. Migas accesibles + BreadcrumbList JSON-LD.
+  Uso: {% render 'msi-breadcrumbs' %}
+  No colisiona con nada: clase propia .msi-bc y usa objetos globales.
+
+  Theme-aware: los colores por defecto sirven en contextos claros (página
+  de evidencia, base del tema). Dentro de las páginas de compra .msi-shop
+  (oscuro por defecto) se adaptan a texto claro; con .msi-shop--light vuelven
+  al esquema claro. Así funciona igual en el tema claro y en el oscuro.
+{% endcomment %}
+{%- unless template.name == 'index' or template.name == 'cart' or template.name == '404' -%}
+<style>
+  .msi-bc { font-size:.82rem; margin:0 0 .6em; }
+  .msi-bc ol { list-style:none; display:flex; flex-wrap:wrap; gap:.15em; margin:0; padding:0; }
+  .msi-bc li { color:#5b6b63; }
+  .msi-bc li + li::before { content:"›"; padding:0 .45em; color:#9fb0a7; }
+  .msi-bc a { color:#1f7a3a; text-decoration:none; }
+  .msi-bc a:hover { text-decoration:underline; }
+  .msi-bc [aria-current="page"] { color:#16201a; font-weight:600; }
+
+  /* Dentro de las páginas de compra oscuras (.msi-shop = oscuro por defecto) */
+  .msi-shop .msi-bc li { color:rgba(255,255,255,.55); }
+  .msi-shop .msi-bc li + li::before { color:rgba(255,255,255,.32); }
+  .msi-shop .msi-bc a { color:var(--msi-accent,#7bc144); }
+  .msi-shop .msi-bc [aria-current="page"] { color:rgba(255,255,255,.92); }
+
+  /* Modo claro de las páginas de compra: vuelve al esquema claro */
+  .msi-shop--light .msi-bc li { color:#5b6b63; }
+  .msi-shop--light .msi-bc li + li::before { color:#9fb0a7; }
+  .msi-shop--light .msi-bc a { color:#1f7a3a; }
+  .msi-shop--light .msi-bc [aria-current="page"] { color:#16201a; }
+</style>
+<nav class="msi-bc" aria-label="Ruta de navegación">
+  <ol>
+    <li><a href="{{ routes.root_url }}">Inicio</a></li>
+    {%- case template.name -%}
+      {%- when 'page' -%}
+        <li aria-current="page">{{ page.title | escape }}</li>
+      {%- when 'article' -%}
+        <li><a href="{{ blog.url }}">{{ blog.title | escape }}</a></li>
+        <li aria-current="page">{{ article.title | escape }}</li>
+      {%- when 'blog' -%}
+        <li aria-current="page">{{ blog.title | escape }}</li>
+      {%- when 'product' -%}
+        {%- if collection -%}<li><a href="{{ collection.url }}">{{ collection.title | escape }}</a></li>{%- endif -%}
+        <li aria-current="page">{{ product.title | escape }}</li>
+      {%- when 'collection' -%}
+        <li aria-current="page">{{ collection.title | escape }}</li>
+    {%- endcase -%}
+  </ol>
+</nav>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Inicio", "item": {{ shop.url | json }} }
+    {%- case template.name -%}
+      {%- when 'page' -%}
+      ,{ "@type": "ListItem", "position": 2, "name": {{ page.title | json }}, "item": {{ canonical_url | json }} }
+      {%- when 'article' -%}
+      ,{ "@type": "ListItem", "position": 2, "name": {{ blog.title | json }}, "item": {{ blog.url | prepend: shop.url | json }} }
+      ,{ "@type": "ListItem", "position": 3, "name": {{ article.title | json }}, "item": {{ canonical_url | json }} }
+      {%- when 'product' -%}
+      ,{ "@type": "ListItem", "position": 2, "name": {{ product.title | json }}, "item": {{ canonical_url | json }} }
+      {%- when 'collection' -%}
+      ,{ "@type": "ListItem", "position": 2, "name": {{ collection.title | json }}, "item": {{ canonical_url | json }} }
+    {%- endcase -%}
+  ]
+}
+</script>
+{%- endunless -%}
