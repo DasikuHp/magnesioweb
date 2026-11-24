@@ -40,3 +40,6 @@ AGENTS.md
 
 # Copia local de la versión de producción (HTML de Shopify), no se publica
 /codigofuente/
+
+# Demo generada (tema de Shopify renderizado + prototipo)
+/site/
