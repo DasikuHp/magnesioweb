@@ -22,7 +22,9 @@ Es la web que hice para MSI, una marca que vende magnesio natural en cápsulas y
 
 Al bajar por la página, un bote se abre y las cápsulas salen volando mientras aparecen los textos de cada beneficio. Debajo están los productos con su precio, un vídeo-anuncio, los packs, para quién es cada producto, la sección "Nosotros" y el estudio clínico en el que se apoya la marca.
 
-<!-- VIDEO_ESCRITORIO -->
+https://github.com/user-attachments/assets/b8743d23-5fdd-4a43-84c0-dce79aa91ad1
+
+<sub>La versión final en el ordenador: animación en tema claro, productos, vídeo-anuncio, packs, evidencia y la misma animación en tema oscuro.</sub>
 
 ## La versión final (tema de Shopify)
 
@@ -43,7 +45,7 @@ Al bajar por la página, un bote se abre y las cápsulas salen volando mientras 
 
 En el móvil la animación usa una versión más ligera (61 fotogramas más pequeños) y coloca el bote abajo y el texto arriba para que no se pisen:
 
-<!-- VIDEO_MOVIL -->
+https://github.com/user-attachments/assets/befccc5e-86c9-414c-a0ca-1cd909c9c791
 
 ## El prototipo en Next.js
 
