@@ -31,3 +31,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Exportación estática
+/out/
+
+# Generado por next dev (instrucciones para agentes de IA)
+AGENTS.md
+
+# Copia local de la versión de producción (HTML de Shopify), no se publica
+/codigofuente/

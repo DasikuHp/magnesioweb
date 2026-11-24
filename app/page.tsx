@@ -3,6 +3,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useEffect } from "react";
 import { useGlassMode } from "@/hooks/useGlassMode";
+import { asset } from "@/lib/asset";
 import { glassModeStore } from "@/lib/glassModeStore";
 
 const ScrollytellingCanvas = dynamic(
@@ -143,7 +144,7 @@ function ProductsSection() {
       tag: "⚡ Más Vendido",
       tagColor: "#e8620a",
       bg: "#0d0804",
-      imageSrc: "/images/1botenaranja.png",
+      imageSrc: asset("/images/1botenaranja.webp"),
       imageAlt: "Magnesio Natural con Vitamina C",
       line: "MSI Sport",
       name: "Magnesio Natural con Vitamina C",
@@ -155,7 +156,7 @@ function ProductsSection() {
       tag: "🌿 Articulaciones",
       tagColor: "#7bc144",
       bg: "#060d04",
-      imageSrc: "/images/1boteverde.png",
+      imageSrc: asset("/images/1boteverde.webp"),
       imageAlt: "Magnesio con Colágeno",
       line: "MSI Health Bienestar",
       name: "Magnesio con Colágeno",
@@ -167,7 +168,7 @@ function ProductsSection() {
       tag: "✨ Acción rápida",
       tagColor: "#c9a84c",
       bg: "#0a0a08",
-      imageSrc: "/images/1deaceitemagnesio.png",
+      imageSrc: asset("/images/1deaceitemagnesio.webp"),
       imageAlt: "Aceite de Magnesio Spray",
       line: "MSI Aceite Transdérmico",
       name: "Aceite de Magnesio en Spray",
@@ -265,7 +266,7 @@ function PacksSection() {
       qty: "1",
       unit: "ud",
       label: "Unidad",
-      imageSrc: "/images/1deaceitemagnesio.png",
+      imageSrc: asset("/images/1deaceitemagnesio.webp"),
       savings: null,
       price: "14,90€",
       perUnit: "14,90€/unidad",
@@ -277,7 +278,7 @@ function PacksSection() {
       qty: "4",
       unit: "uds",
       label: "Pack Familiar",
-      imageSrc: "/images/packde4naranja.png",
+      imageSrc: asset("/images/packde4naranja.webp"),
       savings: "Ahorras 9,70€",
       price: "49,90€",
       perUnit: "12,48€/unidad",
@@ -290,7 +291,7 @@ function PacksSection() {
       qty: "6",
       unit: "uds",
       label: "Pack Total",
-      imageSrc: "/images/botede6verde.png",
+      imageSrc: asset("/images/botede6verde.webp"),
       savings: "Ahorras 19,50€",
       price: "69,90€",
       perUnit: "11,65€/unidad",
@@ -491,7 +492,7 @@ function BenefitsSection() {
             style={{ height: "520px" }}
           >
             <Image
-              src="/images/parejafeliz.png"
+              src={asset("/images/parejafeliz.webp")}
               alt="Vida activa con MSI Magnesio"
               fill
               className="object-cover"
@@ -503,7 +504,7 @@ function BenefitsSection() {
             style={{ borderColor: "rgba(255,255,255,0.06)" }}
           >
             <Image
-              src="/images/3productosjuntos.png"
+              src={asset("/images/3productosjuntos.webp")}
               alt="Gama completa MSI"
               fill
               className="object-cover"
@@ -515,7 +516,7 @@ function BenefitsSection() {
             style={{ borderColor: "rgba(255,255,255,0.06)", zIndex: 10 }}
           >
             <Image
-              src="/images/parejafeliz2.png"
+              src={asset("/images/parejafeliz2.webp")}
               alt="Vida activa MSI"
               fill
               className="object-cover"
@@ -571,19 +572,19 @@ function BenefitsSection() {
 function LifestyleSection() {
   const items = [
     {
-      src: "/images/Foto-stock-abuela.png",
+      src: asset("/images/Foto-stock-abuela.webp"),
       alt: "Familia activa con MSI",
       label: "Vida en familia",
       large: true,
     },
     {
-      src: "/images/parejafeliz2.png",
+      src: asset("/images/parejafeliz2.webp"),
       alt: "Pareja activa en naturaleza",
       label: "Activos cada día",
       large: false,
     },
     {
-      src: "/images/3productosjuntos.png",
+      src: asset("/images/3productosjuntos.webp"),
       alt: "Gama completa MSI",
       label: "La gama completa",
       large: false,
