@@ -14,7 +14,7 @@
     <a href="https://dasikuhp.github.io/magnesioweb/"><strong>Ver la demo</strong></a> ·
     <a href="https://dasikuhp.github.io/magnesioweb/nextjs/">Prototipo en Next.js</a> ·
     <a href="https://github.com/DasikuHp/magnesioweb/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/DasikuHp/magnesioweb/actions/workflows/ci.yml/badge.svg"></a>
-    <img alt="Licencia BSL 1.1" src="https://img.shields.io/badge/licencia-BSL_1.1-blue">
+    <img alt="Todos los derechos reservados" src="https://img.shields.io/badge/licencia-todos_los_derechos_reservados-red">
   </p>
 </div>
 
@@ -113,7 +113,9 @@ magnesioweb
 └── .github/workflows/ci.yml          Lint, build y despliegue en GitHub Pages
 ```
 
-## Instalación
+## Probarlo en local
+
+Para revisar el proyecto (cualquier otro uso necesita permiso, ver la licencia):
 
 ```bash
 git clone https://github.com/DasikuHp/magnesioweb.git
@@ -136,7 +138,7 @@ Para usar el tema en una tienda real se sube la carpeta `shopify/` con [Shopify 
 
 Las imágenes de producto, las fotos y los fotogramas de las animaciones los generé con herramientas de IA a partir de las fotos oficiales de los botes. La marca MSI, sus productos, sus textos y el estudio clínico son del cliente y se muestran con su permiso. En el repositorio, el email, el teléfono y la verificación de Google de la tienda se han cambiado por datos de ejemplo.
 
-El código está bajo la [Business Source License 1.1](LICENSE): puedes leerlo, copiarlo y modificarlo y usarlo fuera de producción; el uso comercial necesita permiso y el 27 de abril de 2030 pasa a Apache 2.0. La licencia no cubre la marca ni los textos de MSI. Contacto: [dasikuhp@gmail.com](mailto:dasikuhp@gmail.com).
+El código es mío y **no tiene licencia abierta**: está publicado para que se pueda ver, pero copiarlo, modificarlo, difundirlo o usarlo necesita una licencia de pago ([LICENSE](LICENSE)). Si te interesa, escríbeme a [dasikuhp@gmail.com](mailto:dasikuhp@gmail.com). La marca y los textos de MSI no se pueden usar en ningún caso.
 
 <div align="center">
   <sub>Hecho por <a href="https://github.com/DasikuHp">DasikuHp</a></sub>
