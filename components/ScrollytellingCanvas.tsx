@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { asset } from "@/lib/asset";
 import { useScroll, useSpring, useTransform, motion } from "framer-motion";
 
 const FRAME_COUNT = 121;
+const FIRST_BATCH = 24; // fotogramas que se esperan antes de enseñar la página
 
 type SequenceKey = "naranja" | "verde" | "spray";
 
@@ -125,7 +127,7 @@ function padNumber(num: number): string {
 function generateFramePaths(folder: string): string[] {
   return Array.from(
     { length: FRAME_COUNT },
-    (_, i) => `/${folder}/frame_${padNumber(i + 1)}.webp`
+    (_, i) => asset(`/${folder}/frame_${padNumber(i + 1)}.webp`)
   );
 }
 
@@ -198,38 +200,41 @@ export default function ScrollytellingCanvas() {
     mass: 0.5,
   });
 
+  // Solo se espera a los primeros fotogramas para enseñar la página; el resto
+  // se descarga de 8 en 8 mientras el usuario empieza a leer y a bajar.
   const preloadImages = useCallback(async () => {
     const paths = generateFramePaths(sequence.folder);
     const images: HTMLImageElement[] = new Array(FRAME_COUNT);
-    let loaded = 0;
+    framesRef.current = images;
+    const load = (i: number) =>
+      new Promise<void>((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          images[i] = img;
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = paths[i];
+      });
 
+    let done = 0;
     await Promise.all(
-      paths.map(
-        (path, i) =>
-          new Promise<void>((resolve) => {
-            const img = new Image();
-            img.onload = () => {
-              images[i] = img;
-              loaded++;
-              setLoadProgress(Math.round((loaded / FRAME_COUNT) * 100));
-              resolve();
-            };
-            img.onerror = () => {
-              loaded++;
-              setLoadProgress(Math.round((loaded / FRAME_COUNT) * 100));
-              resolve();
-            };
-            img.src = path;
-          })
+      Array.from({ length: FIRST_BATCH }, (_, i) =>
+        load(i).then(() => setLoadProgress(Math.round((++done / FIRST_BATCH) * 100)))
       )
     );
-
-    framesRef.current = images;
     setIsLoaded(true);
-    setTimeout(() => setShowContent(true), 600);
+    setTimeout(() => setShowContent(true), 400);
+
+    for (let start = FIRST_BATCH; start < FRAME_COUNT; start += 8) {
+      const end = Math.min(start + 8, FRAME_COUNT);
+      await Promise.all(Array.from({ length: end - start }, (_, k) => load(start + k)));
+    }
   }, [sequence]);
 
   useEffect(() => {
+    // Los setState de preloadImages ocurren al llegar cada imagen (callbacks), no durante el efecto.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     preloadImages();
   }, [preloadImages]);
 
@@ -238,7 +243,9 @@ export default function ScrollytellingCanvas() {
     if (!canvas) return;
     const ctx = canvas.getContext("2d", { willReadFrequently: false });
     if (!ctx) return;
-    const img = framesRef.current[frameIndex];
+    // Si ese fotograma aún no ha llegado, se usa el anterior que sí esté cargado.
+    let img = framesRef.current[frameIndex];
+    for (let i = frameIndex - 1; !img && i >= 0; i--) img = framesRef.current[i];
     if (!img) return;
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
