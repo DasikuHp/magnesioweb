@@ -13,6 +13,7 @@
   <p>
     <a href="https://dasikuhp.github.io/magnesioweb/"><strong>Ver la demo de esta versión</strong></a> ·
     <a href="https://github.com/DasikuHp/magnesioweb/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/DasikuHp/magnesioweb/actions/workflows/ci.yml/badge.svg"></a>
+    <img alt="Licencia BSL 1.1" src="https://img.shields.io/badge/licencia-BSL_1.1-blue">
   </p>
 </div>
 
@@ -112,7 +113,7 @@ Cada push a `main` pasa el lint y el build en GitHub Actions y publica `out/` en
 
 Las imágenes de producto, las fotos y los fotogramas de las animaciones los generé con herramientas de IA para la marca. La marca MSI, sus productos y sus textos son del cliente y se muestran con su permiso.
 
-<!-- LICENCIA -->
+El código está bajo la [Business Source License 1.1](LICENSE): puedes leerlo, copiarlo y modificarlo y usarlo fuera de producción; el uso comercial necesita permiso y el 27 de abril de 2030 pasa a Apache 2.0. La licencia no cubre la marca ni los textos de MSI. Contacto: [dasikuhp@gmail.com](mailto:dasikuhp@gmail.com).
 
 <div align="center">
   <sub>Hecho por <a href="https://github.com/DasikuHp">DasikuHp</a> · versión anterior a la de producción</sub>
